@@ -6,6 +6,9 @@
 #include "bg_local.h"
 #include "g_vehicles.h"
 
+// Randomizer addition
+extern vmCvar_t	cg_enableRandomizer;
+
 extern qboolean PM_ClientImpact( trace_t *trace, qboolean damageSelf );
 extern qboolean PM_ControlledByPlayer( void );
 extern qboolean PM_InReboundHold( int anim );
@@ -120,6 +123,11 @@ qboolean	PM_SlideMove( float gravMod ) {
 
 		// calculate position we are trying to move to
 		VectorMA( pm->ps->origin, time_left, pm->ps->velocity, end );
+
+		//safety check here
+		if (cg_enableRandomizer.integer && (_isnan(end[0]) || isnan(end[1]) || _isnan(end[2]))) {
+			continue;
+		}
 
 		// see if we can make it there
 		pm->trace ( &trace, pm->ps->origin, pm->mins, pm->maxs, end, pm->ps->clientNum, slideMoveContents, (EG2_Collision)0, 0 );

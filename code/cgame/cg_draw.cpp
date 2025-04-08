@@ -3778,6 +3778,38 @@ static void CG_Draw2DScreenTints( void )
 	}
 }
 
+// Randomizer addition
+/*
++===============
++CG_DrawSeed
++===============
++*/
+static float CG_DrawSeed(float y) {
+	if (cg_enableRandomizer.integer)
+	{
+		char* seed_string;
+		if (cg_enableRandomizerEnhancements.integer)
+		{
+			seed_string = va("Seed (X): %s", cg_setSeed.string);
+		}
+		else
+		{
+			seed_string = va("Seed : %s", cg_setSeed.string);
+		}
+		const int width = cgi_R_Font_StrLenPixels(seed_string, cgs.media.qhFontMedium, 1.0f);
+		cgi_R_Font_DrawString(635 - width, y + 2, seed_string, colorTable[CT_LTGOLD1], cgs.media.qhFontMedium, -1, 1.0f);
+		return y + BIGCHAR_HEIGHT + 10;
+	}
+	else
+	{
+		const char* seed_string = va("No Rand");
+		const int width = cgi_R_Font_StrLenPixels(seed_string, cgs.media.qhFontMedium, 1.0f);
+		cgi_R_Font_DrawString(635 - width, y + 2, seed_string, colorTable[CT_DKORANGE], cgs.media.qhFontMedium, -1, 1.0f);
+		return y + BIGCHAR_HEIGHT + 10;
+	}
+}
+
+
 /*
 +======================
 +CG_DrawOverbounceInfo
@@ -4254,6 +4286,12 @@ static void CG_Draw2D( void )
 	if ( cg_drawOverbounceInfo.integer )
 	{
 		CG_DrawOverbounceInfo();
+	}
+
+	// Randomizer addition
+	if (cg_enableRandomizer.integer && cg_drawSeed.integer)
+	{
+		CG_DrawSeed(y);
 	}
 
 /*	if (cg.showInformation)

@@ -56,6 +56,7 @@ typedef enum
 	eNO = 0,
 	eFULL,
 	eAUTO,
+	eRESET //Used when loading auto_yavin1b
 } SavedGameJustLoaded_e;
 
 

@@ -4056,6 +4056,14 @@ void SP_NPC_Droid_Saber( gentity_t *self)
 	SP_NPC_spawner( self );
 }
 
+// Randomizer addition
+
+
+
+
+
+
+
 //NPC console commands
 /*
 NPC_Spawn_f

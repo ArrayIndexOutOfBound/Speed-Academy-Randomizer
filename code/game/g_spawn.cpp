@@ -571,6 +571,8 @@ void SP_NPC_Droid_Protocol( gentity_t *self );
 void SP_NPC_Droid_Assassin( gentity_t *self);
 void SP_NPC_Droid_Saber( gentity_t *self);
 
+// Randomizer addition
+
 void SP_waypoint (gentity_t *ent);
 void SP_waypoint_small (gentity_t *ent);
 void SP_waypoint_navgoal (gentity_t *ent);
@@ -812,6 +814,8 @@ spawn_t	spawns[] = {
 	{"NPC_Colombian_EmplacedGunner", SP_NPC_ShadowTrooper },
 	{"NPC_Manuel_Vergara_RMG", SP_NPC_Desann },
 //	{"info_NPCnav", SP_waypoint},
+
+	// Randomizer Addition
 
 	{"waypoint", SP_waypoint},
 	{"waypoint_small", SP_waypoint_small},

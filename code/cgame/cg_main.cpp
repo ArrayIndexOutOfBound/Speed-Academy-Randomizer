@@ -418,6 +418,23 @@ vmCvar_t	cg_yawSpeeder;
 vmCvar_t	cg_yawTauntaun;
 vmCvar_t	cg_yawVehicle;
 
+// Randomizer addition
+vmCvar_t	cg_enableRandomizer;
+vmCvar_t	cg_enableRandomizerEnhancements;
+vmCvar_t	cg_drawSeed;
+vmCvar_t	cg_useSetSeed;
+vmCvar_t	cg_setSeed;
+// Better rng for randomizer : uniform distribution.
+#include <random>
+mt19937 rngRandoBase;
+mt19937 rngRandoEnhancements;
+// Randomizer - evil mode
+vmCvar_t	cg_enableRandSaberColor;
+vmCvar_t	cg_enableRandSaberLength;
+
+
+
+
 typedef struct {
 	vmCvar_t	*vmCvar;
 	char		*cvarName;
@@ -641,6 +658,16 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_yawSpeeder, "cg_yawSpeeder", "0.0", CVAR_ARCHIVE },
 	{ &cg_yawTauntaun, "cg_yawTauntaun", "0.0", CVAR_ARCHIVE },
 	{ &cg_yawVehicle, "cg_yawVehicle", "0.0", CVAR_ARCHIVE },
+
+	// Randomizer addition
+	{ &cg_enableRandomizer, "cg_enableRandomizer", "0", CVAR_ARCHIVE }, // By default, it's disabled
+	{ &cg_enableRandomizerEnhancements, "cg_enableRandomizerEnhancements", "0", CVAR_ARCHIVE }, // By default, it's disabled
+	{ &cg_drawSeed, "cg_drawSeed", "0", CVAR_ARCHIVE },
+	{ &cg_useSetSeed, "cg_useSetSeed", "0", CVAR_ARCHIVE },
+	{ &cg_setSeed, "cg_setSeed", "", CVAR_ARCHIVE },
+	// Randomizer - evil mode
+	{ &cg_enableRandSaberColor, "cg_enableRandSaberColor", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandSaberLength, "cg_enableRandSaberLength", "0", CVAR_ARCHIVE },
 };
 
 static int cvarTableSize = sizeof( cvarTable ) / sizeof( cvarTable[0] );

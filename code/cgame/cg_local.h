@@ -729,6 +729,21 @@ extern	vmCvar_t		cg_yawSpeeder;
 extern	vmCvar_t		cg_yawTauntaun;
 extern	vmCvar_t		cg_yawVehicle;
 
+// Randomizer addition
+extern vmCvar_t			cg_enableRandomizer;
+extern vmCvar_t			cg_enableRandomizerEnhancements;
+extern vmCvar_t			cg_drawSeed;
+extern vmCvar_t			cg_setSeed;
+// Better rng for randomizer : uniform distribution.
+#include <random>
+extern mt19937 rngRandoBase;
+extern mt19937 rngRandoEnhancements;
+extern uniform_int_distribution<int> distItems;
+extern uniform_int_distribution<int> distNPC;
+extern uniform_int_distribution<int> distNPC_H;
+// Randomizer - evil mode
+extern vmCvar_t			cg_enableRandSaberColor;
+
 void CG_NewClientinfo( int clientNum );
 //
 // cg_main.c

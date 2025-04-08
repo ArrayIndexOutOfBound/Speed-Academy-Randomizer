@@ -14,6 +14,10 @@
 #include "objectives.h"
 #include "../cgame/cg_local.h"	// yeah I know this is naughty, but we're shipping soon...
 
+// Randomizer addition
+#include <string>
+#include "../randomizer/RandomizerUtils.h"
+
 //rww - RAGDOLL_BEGIN
 #include "../ghoul2/ghoul2_gore.h"
 //rww - RAGDOLL_END
@@ -561,6 +565,8 @@ void G_FindTeams( void ) {
 				continue;
 			if (e2->flags & FL_TEAMSLAVE)
 				continue;
+			if (e->spawnflags & SFB_CINEMATIC) //Ignore cinematic NPCs
+				continue;
 			if (!strcmp(e->team, e2->team))
 			{
 				c2++;
@@ -723,7 +729,21 @@ void InitGame(  const char *mapname, const char *spawntarget, int checkSum, cons
 	gi.Printf ("gamename: %s\n", GAMEVERSION);
 	gi.Printf ("gamedate: %s\n", __DATE__);
 
-	srand( randomSeed );
+	// Randomizer addition
+	//Reset randomiser seed on new load of yavin1b
+	if (cg_enableRandomizer.integer)
+	{
+		if ((!Q_stricmp(mapname, "yavin1b") && eSavedGameJustLoaded == eNO) || eSavedGameJustLoaded == eRESET) {
+			RandomizerUtils::RegenerateSeed();
+		}
+		char	seed[MAX_STRING_CHARS];
+		gi.Cvar_VariableStringBuffer("cg_setSeed", seed, sizeof(seed));
+		RandomizerUtils::seedRandomizer(seed, mapname);
+	}
+	else
+	{
+		srand(randomSeed);
+	}
 
 	G_InitCvars();
 

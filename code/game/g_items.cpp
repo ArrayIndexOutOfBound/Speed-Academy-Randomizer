@@ -8,6 +8,11 @@
 #include "g_items.h"
 #include "wp_saber.h"
 
+// Randomizer addition
+#include <random>
+extern mt19937 rngRandoBase;
+extern vmCvar_t cg_enableRandomizer;
+
 extern qboolean	missionInfo_Updated;
 
 extern void CrystalAmmoSettings(gentity_t *ent);
@@ -1058,6 +1063,16 @@ void Use_Item( gentity_t *ent, gentity_t *other, gentity_t *activator )
 
 //======================================================================
 
+// Randomizer addition
+void updateItemMinsMaxs(gitem_t* item) {
+	item->mins[0] = item->mins[0] * 1.2;
+	item->mins[1] = item->mins[1] * 1.2;
+	item->mins[2] = item->mins[2] * 1.2;
+	item->maxs[0] = item->maxs[0] * 1.2;
+	item->maxs[1] = item->maxs[1] * 1.2;
+	item->maxs[2] = item->maxs[2] * 1.2;
+}
+
 /*
 ================
 FinishSpawningItem
@@ -1081,6 +1096,54 @@ void FinishSpawningItem( gentity_t *ent ) {
 		{
 			break;
 		}
+	}
+
+	// Randomizer adition
+	// Randomizer : after getting the item from bg_itemlist, we can finally randomize it here, because every items goes into this function and not only "gun rack"
+	gitem_t* itemNew;
+	gitem_t* itemOld; // So that we have a copy of this, for debugging purpose
+	if (cg_enableRandomizer.integer)
+	{
+		itemOld = item;
+		uniform_int_distribution<int> itemDist(ITM_SABER_PICKUP, ITM_FORCE_SABERTHROW_PICKUP);
+		int rng = itemDist(rngRandoBase);
+		itemNew = bg_itemlist + rng;
+
+		while ((itemNew->giTag >= 13 && itemNew->giTag <= 22) || (itemNew->giTag == 43) || (itemNew->giTag == 45))
+		{
+			rng = itemDist(rngRandoBase);
+			itemNew = bg_itemlist + rng;
+		}
+		// In case we roll a saber or an holocron, we shall roll a 33/66 to keep the item or not
+		if (itemNew->giType == IT_HOLOCRON || (itemNew->giTag == WP_SABER && itemNew->giType == IT_WEAPON)) 
+		{
+			uniform_int_distribution<int> holocronDist(0, 2);
+			rng = holocronDist(rngRandoBase);
+			if (!rng) // We rolled a 0, reroll once
+			{
+				rng = itemDist(rngRandoBase);
+				// No strange weapon, 'shield' and 'datapad'
+				while ((itemNew->giTag >= 13 && itemNew->giTag <= 22) || (itemNew->giTag == 43) || (itemNew->giTag == 45))
+				{
+					rng = itemDist(rngRandoBase);
+					itemNew = bg_itemlist + rng;
+				}
+			}
+			// else, we rolled a >=1, we keep the saber/holocron
+
+			if (itemNew->giType == IT_HOLOCRON) ent->count = 0;
+			updateItemMinsMaxs(itemNew);
+		}
+		else
+		{
+			//Expand 'hitbox' of randomly spawned items a little so they can be picked up while partially clipped into geometry
+			//not for holocrons as their pickup range is pretty large already
+			// Posto Edit : I encountered holocron that were inside walls, so might as well update their hitbox too
+			updateItemMinsMaxs(itemNew);
+		}
+		item = itemNew;
+		ent->classname == item->classname;
+		ent->item = item;
 	}
 
 	// Set bounding box for item
@@ -1168,22 +1231,25 @@ void FinishSpawningItem( gentity_t *ent ) {
 		// drop to floor
 		VectorSet( dest, ent->s.origin[0], ent->s.origin[1], MIN_WORLD_COORD );
 		gi.trace( &tr, ent->s.origin, ent->mins, ent->maxs, dest, ent->s.number, MASK_SOLID|CONTENTS_PLAYERCLIP, (EG2_Collision)0, 0 );
-		if ( tr.startsolid ) 
+		if (!cg_enableRandomizer.integer) // Randomizer addition
 		{
-			if ( &g_entities[tr.entityNum] != NULL )
+			if (tr.startsolid)
 			{
-				gi.Printf (S_COLOR_RED"FinishSpawningItem: removing %s startsolid at %s (in a %s)\n", ent->classname, vtos(ent->s.origin), g_entities[tr.entityNum].classname );
+				if (&g_entities[tr.entityNum] != NULL)
+				{
+					gi.Printf(S_COLOR_RED"FinishSpawningItem: removing %s startsolid at %s (in a %s)\n", ent->classname, vtos(ent->s.origin), g_entities[tr.entityNum].classname);
+				}
+				else
+				{
+					gi.Printf(S_COLOR_RED"FinishSpawningItem: removing %s startsolid at %s (in a %s)\n", ent->classname, vtos(ent->s.origin));
+				}
+				assert(0 && "item starting in solid");
+				if (!g_entities[ENTITYNUM_WORLD].s.radius) {	//not a region
+					delayedShutDown = level.time + 100;
+				}
+				G_FreeEntity(ent);
+				return;
 			}
-			else
-			{
-				gi.Printf (S_COLOR_RED"FinishSpawningItem: removing %s startsolid at %s (in a %s)\n", ent->classname, vtos(ent->s.origin) );
-			}
-			assert( 0 && "item starting in solid");
-			if (!g_entities[ENTITYNUM_WORLD].s.radius){	//not a region
-				delayedShutDown = level.time + 100;
-			}
-			G_FreeEntity( ent );
-			return;
 		}
 
 		// allow to ride movers
