@@ -1109,29 +1109,30 @@ void FinishSpawningItem( gentity_t *ent ) {
 		int rng = itemDist(rngRandoBase);
 		itemNew = bg_itemlist + rng;
 
-		while ((itemNew->giTag >= 13 && itemNew->giTag <= 22) || (itemNew->giTag == 43) || (itemNew->giTag == 45))
+		// Disable certain items here.
+		while ((itemNew->giTag >= ITM_EMPLACED_GUN_PICKUP && itemNew->giTag <= ITM_NOGHRI_STICK_PICKUP))
 		{
 			rng = itemDist(rngRandoBase);
 			itemNew = bg_itemlist + rng;
 		}
-		// In case we roll a saber or an holocron, we shall roll a 33/66 to keep the item or not
+		// In case we roll a saber or an holocron, we shall roll a 20/80 to keep the item or not
 		if (itemNew->giType == IT_HOLOCRON || (itemNew->giTag == WP_SABER && itemNew->giType == IT_WEAPON)) 
 		{
-			uniform_int_distribution<int> holocronDist(0, 2);
+			uniform_int_distribution<int> holocronDist(0, 4);
 			rng = holocronDist(rngRandoBase);
-			if (!rng) // We rolled a 0, reroll once
+			if (!rng) // We didn't roll a 0, do a reroll of the item
 			{
 				rng = itemDist(rngRandoBase);
-				// No strange weapon, 'shield' and 'datapad'
-				while ((itemNew->giTag >= 13 && itemNew->giTag <= 22) || (itemNew->giTag == 43) || (itemNew->giTag == 45))
+				// Disabled items.
+				while ((itemNew->giTag >= ITM_EMPLACED_GUN_PICKUP && itemNew->giTag <= ITM_NOGHRI_STICK_PICKUP))
 				{
 					rng = itemDist(rngRandoBase);
 					itemNew = bg_itemlist + rng;
 				}
 			}
-			// else, we rolled a >=1, we keep the saber/holocron
+			// else, we rolled a 0, we keep the saber/holocron
 
-			if (itemNew->giType == IT_HOLOCRON) ent->count = 0;
+			if (itemNew->giType == IT_HOLOCRON) ent->count = 1;
 			updateItemMinsMaxs(itemNew);
 		}
 		else

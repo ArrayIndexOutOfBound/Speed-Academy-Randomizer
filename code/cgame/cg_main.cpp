@@ -1472,13 +1472,21 @@ static void CG_RegisterEffects( void )
 
 		if (!theFxScheduler.RegisterEffect( (const char*)effectName ))
 		{
-			assert(0);
-			numFailed++;
+			// Randomizer, skip some effects
+			if (cg_enableRandomizer.integer && (strcmp(effectName, "force/destruction_exp") == 0))
+			{
+
+			}
+			else
+			{
+				assert(0);
+				numFailed++;
+			}
 		}
 	}
 	if (numFailed && g_delayedShutdown->integer)
 	{
-		assert(0);
+		//assert(0);
 		CG_Error( "CG_RegisterEffects: %i Effects failed to load.  Please fix, or ask Aurelio.", numFailed );
 	}
 
@@ -2128,6 +2136,25 @@ Ghoul2 Insert End
 		// Send off the terrainInfo to the renderer
 		cgi_RE_InitRendererTerrain( terrainInfo );
 	}
+
+	// Randomizer additions : register all items
+	if (cg_enableRandomizer.integer) {
+		for (i = ITM_SABER_PICKUP; i < ITM_FORCE_SABERTHROW_PICKUP; i++) {
+			if (!(i >= ITM_EMPLACED_GUN_PICKUP && i <= ITM_NOGHRI_STICK_PICKUP))
+			{
+				CG_LoadingString(bg_itemlist[i].classname);
+				CG_RegisterItemVisuals(i);
+			}
+			else
+			{
+				//CG_LoadingString(bg_itemlist[i].classname);
+				//CG_RegisterItemVisuals(i);
+			}
+			
+		}
+	}
+
+
 }
 
 //===========================================================================

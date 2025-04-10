@@ -71,52 +71,14 @@ Default: `0`.
 
 ### List of addition for the 'exotic' Randomizer
 
-#### `cg_enableRandSaberStyle` (0 or 1)
-Random saber style at pickup. That means you will always get a change to get any saber style, so go for a qs/ql if you want something specific.
-
 #### `cg_enableRandSaberLength` (0 or 1)
 Random saber lenght every time the saber is chosen. From 25% to 400% the saber lenght.
 
 #### `cg_enableRandSaberColor` (0 or 1)
 Random saber color every time the saber is chosen. Blue, Green, Yeelow, Orange, Purple and Red. RGB might be possible but that needs investigation.
 
-#### `cg_enableRandJumpHeight` (0 or 1)
-Random jump height with every jump. From 1/3 the normal jump without force to double the height with jump force 3.
-
-#### `cg_enableRandJumpStrength` (0 or 1)
-Random jump strength with every jump. From the normal jump without force to quadruple the Z velocity with jump force 3.
-
-#### `cg_enableRandLanguageVoices` (0 or 1)
-Random language for each voice line (randomized when loaded on map init).
-
-#### `cg_enableRandWeaponProjectile` (0 or 1)
-Random weapon projectile per shot. Only applies if the weapon is a blaster of some sort.
-
-#### `cg_enableRandTextures` (0 or 1)
-Random texture assigned to each surface per map. No vid_restart required to toggle.
-
-#### `cg_enableRandNPCSpeed` (0 or 1)
-Random walking, running and turning speed for NPCs. Range of 33% to 300%.
-
-#### `cg_enableSafeStart` (0 or 1)
-Prevents starting two enemies from attacking unless provoked.
-
-#### `cg_startWithPush` (0 or 1)
-Start game with force push 1.
-
-#### `cg_bonusJanHealth` (0 or 1)
-Applies a flat +50 to Jan's health on kejim_post. This applies before random NPC health.
-
-#### `cg_enableRandNPCHealth` (0 or 1)
-Random health for NPCs. Range of 25% to 400%.
-
-#### `cg_enableRandKyleHealth` (0 or 1)
-Random health for Kyle as the player. Range of 33% to 300%.
-
 
 ### Todos
-- Get approved for a possible speedrun randomizer leaderboard
-- Random codes for doom_comm (if possible)
-- Random codes for kejim_post (if possible)
+- All.
 
 

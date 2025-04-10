@@ -1761,7 +1761,16 @@ void G_SetG2PlayerModel( gentity_t * const ent, const char *modelName, const cha
 		}
 	}
 	int skin = gi.RE_RegisterSkin( skinName );
-	assert(skin);
+	// Randomizer : we are we asserting this in the base game?????
+	if (gi.Cvar_VariableIntegerValue("cg_enableRandomizer"))
+	{
+
+	}
+	else
+	{
+		// Base game
+		assert(skin);
+	}
 	//now generate the ghoul2 model this client should be.
 	if ( ent->client->NPC_class == CLASS_VEHICLE )
 	{//vehicles actually grab their model from the appropriate vehicle data entry
