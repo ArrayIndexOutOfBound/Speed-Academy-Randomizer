@@ -236,8 +236,209 @@ void G_ClassSetDontFlee( gentity_t *self )
 extern void	Vehicle_Register(gentity_t *ent);
 extern void RT_FlyStart( gentity_t *self );
 extern void SandCreature_ClearTimers( gentity_t *ent );
-void NPC_SetMiscDefaultData( gentity_t *ent )
+
+// Randomizer addition
+//extern void G_CreateG2AttachedWeaponModel(gentity_t* ent, const char* weaponModel);
+//Easier to break this into another function as I refactored a bit to make it cleaner
+void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 {
+	// Everything commented need to be redone
+	if (ent->spawnflags & SFB_CINEMATIC)
+	{//if a cinematic guy, default us to wait bState
+		ent->NPC->behaviorState = BS_CINEMATIC;
+	}
+	switch (ent->client->playerTeam) {
+	case TEAM_PLAYER:
+		ent->client->enemyTeam = TEAM_ENEMY;
+		break;
+	case TEAM_ENEMY:
+		ent->client->enemyTeam = TEAM_PLAYER;
+		break;
+	default: //TODO: AMBER Figure out how to handle this properly
+		ent->client->enemyTeam = TEAM_FREE;
+	}
+	//***I'm not sure whether I should leave this as a TEAM_ switch, I think NPC_class may be more appropriate - dmv
+	//Amber - whoever dmv is they're right, this should be based on class
+	switch (ent->client->NPC_class) {
+	case CLASS_SEEKER:
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		//ent->NPC->stats.moveType = MT_FLYSWIM;
+		ent->NPC->stats.move = MT_FLYSWIM;
+		ent->count = 30; // SEEKER shot ammo count
+		return;
+	case CLASS_PROBE:
+	case CLASS_REMOTE:
+	case CLASS_INTERROGATOR:
+	case CLASS_SENTRY:
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		//ent->NPC->stats.moveType = MT_FLYSWIM;
+		ent->NPC->stats.move = MT_FLYSWIM;
+		break;
+	case CLASS_JEDI:
+	case CLASS_LUKE:
+	case CLASS_TAVION:
+	case CLASS_REBORN:
+	case CLASS_DESANN:
+	case CLASS_SHADOWTROOPER:
+		//All saber wielders
+		//ent->client->ps.saberActive = qfalse;
+		//ent->client->ps.saberLength = 0;
+		WP_SaberInitBladeData(ent);
+		//G_CreateG2AttachedWeaponModel(ent, ent->client->ps.saberModel);
+		//ent->client->enemyTeam = TEAM_ENEMY;
+		WP_InitForcePowers(ent);
+		Jedi_ClearTimers(ent);
+		if (ent->spawnflags & JSF_AMBUSH)
+		{//ambusher
+			ent->NPC->scriptFlags |= SCF_IGNORE_ALERTS;
+			ent->client->noclip = qtrue;//hang
+		}
+		break;
+	case CLASS_GONK:
+		// I guess we generically make them player usable
+		ent->svFlags |= SVF_PLAYER_USABLE;
+
+		// Not even sure if we want to give different levels of batteries?  ...Or even that these are the values we'd want to use.
+		switch (g_spskill->integer)
+		{
+		case 0:	//	EASY
+			ent->client->ps.batteryCharge = MAX_BATTERIES * 0.8f;
+			break;
+		case 1:	//	MEDIUM
+			ent->client->ps.batteryCharge = MAX_BATTERIES * 0.75f;
+			break;
+		default:
+		case 2:	//	HARD
+			ent->client->ps.batteryCharge = MAX_BATTERIES * 0.5f;
+			break;
+		}
+		break;
+	case CLASS_R2D2: // No weapons for astromech droids please
+	case CLASS_R5D2:
+		break;
+	default:
+		if (ent->client->ps.weapon != WP_NONE)
+		{
+			//G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl);
+		}
+		if (RandomizerUtils::GetClassTeamByClass(ent->client->NPC_class) == TEAM_PLAYER) //Any other NPCs which would normally be friendsly
+		{
+			switch (ent->client->ps.weapon)
+			{
+			case WP_BRYAR_PISTOL://FIXME: new weapon: imp blaster pistol
+			case WP_BLASTER_PISTOL:
+			case WP_DISRUPTOR:
+			case WP_BOWCASTER:
+			case WP_REPEATER:
+			case WP_DEMP2:
+			case WP_FLECHETTE:
+			case WP_ROCKET_LAUNCHER:
+			default:
+				break;
+			case WP_THERMAL:
+			case WP_BLASTER:
+				//FIXME: health in NPCs.cfg, and not all blaster users are stormtroopers
+				//ent->health = 25;
+				//FIXME: not necc. a ST
+				ST_ClearTimers(ent);
+				if (ent->NPC->rank >= RANK_LT || ent->client->ps.weapon == WP_THERMAL)
+				{//officers, grenade-throwers use alt-fire
+					//ent->health = 50;
+					ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+				}
+				break;
+			}
+		}
+		else if (RandomizerUtils::GetClassTeamByClass(ent->client->NPC_class) == TEAM_ENEMY) { //Any other NPCs which would normally be enemies
+			{
+				ent->NPC->defaultBehavior = BS_DEFAULT;
+				if (ent->client->NPC_class == CLASS_SHADOWTROOPER)
+				{//FIXME: a spawnflag?
+					Jedi_Cloak(ent);
+				}
+
+				//G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl);
+				switch (ent->client->ps.weapon)
+				{
+				case WP_BRYAR_PISTOL:
+					break;
+				case WP_BLASTER_PISTOL:
+					break;
+				case WP_DISRUPTOR:
+					//Sniper
+					ent->NPC->scriptFlags |= SCF_ALT_FIRE;//FIXME: use primary fire sometimes?  Up close?  Different class of NPC?
+					break;
+				case WP_BOWCASTER:
+					break;
+				case WP_REPEATER:
+					//machine-gunner
+					break;
+				case WP_DEMP2:
+					break;
+				case WP_FLECHETTE:
+					//shotgunner
+					if (!Q_stricmp("stofficeralt", ent->NPC_type))
+					{
+						ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+					}
+					break;
+				case WP_ROCKET_LAUNCHER:
+					break;
+				case WP_THERMAL:
+					//Gran, use main, bouncy fire
+//					ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+					break;
+				case WP_MELEE:
+					break;
+				default:
+				case WP_BLASTER:
+					//FIXME: health in NPCs.cfg, and not all blaster users are stormtroopers
+					//FIXME: not necc. a ST
+					ST_ClearTimers(ent);
+					if (ent->NPC->rank >= RANK_COMMANDER)
+					{//commanders use alt-fire
+						ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+					}
+					if (!Q_stricmp("rodian2", ent->NPC_type))
+					{
+						ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+					}
+					break;
+				}
+			}
+		}
+
+		//Extra stuff for cinematic chars and behaviour set for friendly NPCS
+		if (ent->client->NPC_class == CLASS_KYLE || (ent->spawnflags & SFB_CINEMATIC))
+		{
+			ent->NPC->defaultBehavior = BS_CINEMATIC;
+		}
+		else if (ent->client->playerTeam == TEAM_PLAYER)
+		{
+			ent->NPC->defaultBehavior = BS_FOLLOW_LEADER;
+			ent->client->leader = &g_entities[0];
+		}
+
+		//Shields for ATSTs/Mark1s
+		if (ent->client->NPC_class == CLASS_ATST || ent->client->NPC_class == CLASS_MARK1) // chris/steve/kevin requested that the mark1 be shielded also
+		{
+			ent->flags |= (FL_SHIELDED | FL_NO_KNOCKBACK);
+		}
+	}
+}
+
+void NPC_SetMiscDefaultData(gentity_t *ent)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		NPC_SetMiscDefaultDataRandomizer(ent);
+		return;
+	}
+
 	if ( ent->spawnflags & SFB_CINEMATIC )
 	{//if a cinematic guy, default us to wait bState
 		ent->NPC->behaviorState = BS_CINEMATIC;
@@ -4127,7 +4328,8 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Rax(self);
 		break;
 	case 13:
-		SP_NPC_BobaFett(self);
+		//SP_NPC_BobaFett(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 14:
 		SP_NPC_Ragnos(self);
@@ -4244,13 +4446,16 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Saboteur(self);
 		break;
 	case 52:
-		SP_NPC_Monster_Murjj(self);
+		//SP_NPC_Monster_Murjj(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 53:
-		SP_NPC_Monster_Swamp(self);
+		//SP_NPC_Monster_Swamp(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 54:
-		SP_NPC_Monster_Howler(self);
+		//SP_NPC_Monster_Howler(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 55:
 		SP_NPC_Monster_Rancor(self);
@@ -4265,19 +4470,24 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Monster_Claw(self);
 		break;
 	case 59:
-		SP_NPC_Monster_Glider(self);
+		//SP_NPC_Monster_Glider(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 60:
-		SP_NPC_Monster_Flier2(self);
+		//SP_NPC_Monster_Flier2(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 61:
-		SP_NPC_Monster_Lizard(self);
+		//SP_NPC_Monster_Lizard(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 62:
-		SP_NPC_Monster_Fish(self);
+		//SP_NPC_Monster_Fish(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 63:
-		SP_NPC_Monster_Sand_Creature(self);
+		//SP_NPC_Monster_Sand_Creature(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 64:
 		SP_NPC_MineMonster(self);
@@ -4383,7 +4593,8 @@ void SP_NPC_Spawn_Random_Humanoid(gentity_t* self) // Used for cutscenes or othe
 		SP_NPC_Rax(self);
 		break;
 	case 13:
-		SP_NPC_BobaFett(self);
+		//SP_NPC_BobaFett(self);
+		SP_NPC_Spawn_Random_Humanoid(self);
 		break;
 	case 14:
 		SP_NPC_Lannik_Racto(self);
