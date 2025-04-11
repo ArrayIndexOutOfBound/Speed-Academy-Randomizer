@@ -84,6 +84,8 @@ void RandomizerUtils::RegenerateSeed()
 }
 
 void initialiseNameMap() {
+	teamsByName["NPC_Player"] = TEAM_PLAYER;
+
 	teamsByName["NPC_Kyle"] = TEAM_PLAYER;
 	teamsByName["NPC_Lando"] = TEAM_PLAYER;
 	teamsByName["NPC_Jan"] = TEAM_PLAYER;
@@ -172,51 +174,77 @@ void initialiseNameMap() {
 }
 
 void initialiseMapByClass() {
+	teamsByClass[CLASS_PLAYER] = TEAM_PLAYER;
+
+	teamsByClass[CLASS_ATST] = TEAM_PLAYER;
+	teamsByClass[CLASS_BARTENDER] = TEAM_PLAYER;
+	teamsByClass[CLASS_BESPIN_COP] = TEAM_PLAYER;
+	teamsByClass[CLASS_CLAW] = TEAM_PLAYER;
+	teamsByClass[CLASS_COMMANDO] = TEAM_PLAYER;
+	teamsByClass[CLASS_DESANN] = TEAM_PLAYER;
+	teamsByClass[CLASS_FISH] = TEAM_PLAYER;
+	teamsByClass[CLASS_FLIER2] = TEAM_PLAYER;
+	teamsByClass[CLASS_GALAK] = TEAM_PLAYER;
+	teamsByClass[CLASS_GLIDER] = TEAM_PLAYER;
+	teamsByClass[CLASS_GONK] = TEAM_PLAYER;
+	teamsByClass[CLASS_GRAN] = TEAM_PLAYER;
+	teamsByClass[CLASS_HOWLER] = TEAM_PLAYER;
+	teamsByClass[CLASS_RANCOR] = TEAM_PLAYER;
+	teamsByClass[CLASS_SAND_CREATURE] = TEAM_PLAYER;
+	teamsByClass[CLASS_WAMPA] = TEAM_PLAYER;
+	teamsByClass[CLASS_IMPERIAL] = TEAM_PLAYER;
+	teamsByClass[CLASS_IMPWORKER] = TEAM_PLAYER;
+	teamsByClass[CLASS_INTERROGATOR] = TEAM_PLAYER;
+	teamsByClass[CLASS_JAN] = TEAM_PLAYER;
+	teamsByClass[CLASS_JEDI] = TEAM_PLAYER;
 	teamsByClass[CLASS_KYLE] = TEAM_PLAYER;
 	teamsByClass[CLASS_LANDO] = TEAM_PLAYER;
-	teamsByClass[CLASS_JAN] = TEAM_PLAYER;
+	teamsByClass[CLASS_LIZARD] = TEAM_PLAYER;
+	teamsByClass[CLASS_LUKE] = TEAM_PLAYER;
+	teamsByClass[CLASS_MARK1] = TEAM_PLAYER;
+	teamsByClass[CLASS_MARK2] = TEAM_PLAYER;
+	teamsByClass[CLASS_GALAKMECH] = TEAM_PLAYER;
+	teamsByClass[CLASS_MINEMONSTER] = TEAM_PLAYER;
 	teamsByClass[CLASS_MONMOTHA] = TEAM_PLAYER;
-	teamsByClass[CLASS_TAVION] = TEAM_ENEMY;
-	teamsByClass[CLASS_REELO] = TEAM_ENEMY;
-	teamsByClass[CLASS_GALAK] = TEAM_ENEMY;
-	teamsByClass[CLASS_DESANN] = TEAM_ENEMY;
-	teamsByClass[CLASS_BARTENDER] = TEAM_ENEMY;
 	teamsByClass[CLASS_MORGANKATARN] = TEAM_PLAYER;
-	teamsByClass[CLASS_JEDI] = TEAM_PLAYER;
+	teamsByClass[CLASS_MOUSE] = TEAM_PLAYER;
+	teamsByClass[CLASS_MURJJ] = TEAM_PLAYER;
 	teamsByClass[CLASS_PRISONER] = TEAM_PLAYER;
-	teamsByClass[CLASS_REBEL] = TEAM_PLAYER;
-	teamsByClass[CLASS_STORMTROOPER] = TEAM_ENEMY;
-	teamsByClass[CLASS_UGNAUGHT] = TEAM_ENEMY;
-	teamsByClass[CLASS_GRAN] = TEAM_ENEMY;
-	teamsByClass[CLASS_RODIAN] = TEAM_ENEMY;
-	teamsByClass[CLASS_WEEQUAY] = TEAM_ENEMY;
-	teamsByClass[CLASS_TRANDOSHAN] = TEAM_ENEMY;
-	teamsByClass[CLASS_IMPERIAL] = TEAM_ENEMY;
-	teamsByClass[CLASS_IMPWORKER] = TEAM_ENEMY;
-	teamsByClass[CLASS_BESPIN_COP] = TEAM_PLAYER;
-	teamsByClass[CLASS_REBORN] = TEAM_ENEMY;
-	teamsByClass[CLASS_SHADOWTROOPER] = TEAM_ENEMY;
-	//teamsByClass[CLASS_MINEMONSTER] = TEAM_NEUTRAL;
-	teamsByClass[CLASS_MINEMONSTER] = TEAM_ENEMY;
-	teamsByClass[CLASS_INTERROGATOR] = TEAM_ENEMY;
-	teamsByClass[CLASS_PROBE] = TEAM_ENEMY;
-	teamsByClass[CLASS_SEEKER] = TEAM_PLAYER;
-	teamsByClass[CLASS_REMOTE] = TEAM_ENEMY;
-	teamsByClass[CLASS_SENTRY] = TEAM_ENEMY;
-	teamsByClass[CLASS_GONK] = TEAM_NEUTRAL;
-	teamsByClass[CLASS_MOUSE] = TEAM_ENEMY;
+	teamsByClass[CLASS_PROBE] = TEAM_PLAYER;
+	teamsByClass[CLASS_PROTOCOL] = TEAM_PLAYER;
 	teamsByClass[CLASS_R2D2] = TEAM_PLAYER;
 	teamsByClass[CLASS_R5D2] = TEAM_PLAYER;
-	teamsByClass[CLASS_PROTOCOL] = TEAM_PLAYER;
-	teamsByClass[CLASS_SWAMPTROOPER] = TEAM_ENEMY;
-	teamsByClass[CLASS_GALAKMECH] = TEAM_ENEMY;
-	teamsByClass[CLASS_ATST] = TEAM_ENEMY;
-	teamsByClass[CLASS_NONE] = TEAM_PLAYER;
+	teamsByClass[CLASS_REBEL] = TEAM_PLAYER;
+	teamsByClass[CLASS_REBORN] = TEAM_PLAYER;
+	teamsByClass[CLASS_REELO] = TEAM_PLAYER;
+	teamsByClass[CLASS_REMOTE] = TEAM_PLAYER;
+	teamsByClass[CLASS_RODIAN] = TEAM_PLAYER;
+	teamsByClass[CLASS_SEEKER] = TEAM_PLAYER;
+	teamsByClass[CLASS_SENTRY] = TEAM_PLAYER;
+	teamsByClass[CLASS_SHADOWTROOPER] = TEAM_PLAYER;
+	teamsByClass[CLASS_SABOTEUR] = TEAM_PLAYER;
+	teamsByClass[CLASS_STORMTROOPER] = TEAM_PLAYER;
+	teamsByClass[CLASS_SWAMP] = TEAM_PLAYER;
+	teamsByClass[CLASS_SWAMPTROOPER] = TEAM_PLAYER;
+	teamsByClass[CLASS_NOGHRI] = TEAM_PLAYER;
+	teamsByClass[CLASS_TAVION] = TEAM_PLAYER;
+	teamsByClass[CLASS_ALORA] = TEAM_PLAYER;
+	teamsByClass[CLASS_TRANDOSHAN] = TEAM_PLAYER;
+	teamsByClass[CLASS_UGNAUGHT] = TEAM_PLAYER;
+	teamsByClass[CLASS_JAWA] = TEAM_PLAYER;
+	teamsByClass[CLASS_WEEQUAY] = TEAM_PLAYER;
+	teamsByClass[CLASS_TUSKEN] = TEAM_PLAYER;
+	teamsByClass[CLASS_BOBAFETT] = TEAM_PLAYER;
+	teamsByClass[CLASS_ROCKETTROOPER] = TEAM_PLAYER;
+	teamsByClass[CLASS_SABER_DROID] = TEAM_PLAYER;
+	teamsByClass[CLASS_ASSASSIN_DROID] = TEAM_PLAYER;
+	teamsByClass[CLASS_HAZARD_TROOPER] = TEAM_PLAYER;
+	teamsByClass[CLASS_VEHICLE] = TEAM_PLAYER;
 }
 
 team_t RandomizerUtils::GetClassTeamByClassname(char *npcClassname)
 {
-	if (!teamsByName["NPC_Kyle"]) {
+	if (!teamsByName["NPC_Player"]) {
 		initialiseNameMap();
 	}
 	team_t valFromMap = teamsByName[npcClassname];
@@ -225,7 +253,7 @@ team_t RandomizerUtils::GetClassTeamByClassname(char *npcClassname)
 
 team_t RandomizerUtils::GetClassTeamByClass(class_t npcClass)
 {
-	if (!teamsByClass[CLASS_KYLE]) {
+	if (!teamsByClass[CLASS_PLAYER]) {
 		initialiseMapByClass();
 	}
 	team_t valFromMap = teamsByClass[npcClass];

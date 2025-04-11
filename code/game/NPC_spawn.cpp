@@ -255,7 +255,18 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 		ent->client->enemyTeam = TEAM_PLAYER;
 		break;
 	default: //TODO: AMBER Figure out how to handle this properly
-		ent->client->enemyTeam = TEAM_FREE;
+		if (ent->client->NPC_class == CLASS_PLAYER) // We somehow are TEAM_FREE as the player
+		{
+			// Rosh is STILL aggroing after cutting the tree.
+			ent->client->playerTeam = TEAM_PLAYER;
+			ent->client->enemyTeam = TEAM_ENEMY;
+		}
+		else
+		{
+			// Never happens ? I put a breakpoint here that never triggers
+			ent->client->enemyTeam = TEAM_FREE;
+		}
+		
 	}
 	//***I'm not sure whether I should leave this as a TEAM_ switch, I think NPC_class may be more appropriate - dmv
 	//Amber - whoever dmv is they're right, this should be based on class
@@ -286,10 +297,13 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	case CLASS_SHADOWTROOPER:
 		//All saber wielders
 		//ent->client->ps.saberActive = qfalse;
+		ent->client->ps.SaberDeactivate();
 		//ent->client->ps.saberLength = 0;
+		ent->client->ps.SetSaberLength(0);
 		WP_SaberInitBladeData(ent);
-		//G_CreateG2AttachedWeaponModel(ent, ent->client->ps.saberModel);
-		//ent->client->enemyTeam = TEAM_ENEMY;
+		WP_SaberAddG2SaberModels(ent);
+		//G_CreateG2AttachedWeaponModel(ent, ent->client->ps.saber->model, 1, 1);
+		ent->client->enemyTeam = TEAM_ENEMY;
 		WP_InitForcePowers(ent);
 		Jedi_ClearTimers(ent);
 		if (ent->spawnflags & JSF_AMBUSH)
@@ -1867,7 +1881,8 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent, qboolean fullSpawnNow )
 	//		newent->svFlags |= SVF_NOPUSH;
 		}
 		// Randomizer addition.
-		else if (cg_enableRandomizer.integer) {
+		//else if (cg_enableRandomizer.integer) {
+		if (cg_enableRandomizer.integer) {
 				newent->client->playerTeam = RandomizerUtils::GetClassTeamByClassname(ent->classname);
 		}
 	}

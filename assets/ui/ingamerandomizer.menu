@@ -155,7 +155,7 @@
 		itemDef {
 			name				randomizerbutton
 			group				toprow
-			text				RANDOMIZER_IG
+			text				RANDOMIZER
 			descText			Configure randomizer settings
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
@@ -211,8 +211,8 @@
 		{
 			name				ingamereturnbutton
 			group				othermain
-			text				RETURN_IG
-			descText			RETURN_IG
+			text				RETURN
+			descText			RETURN
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
 			rect				115 444 130 24 

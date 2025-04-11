@@ -998,6 +998,7 @@ void G_GrabEntity( gentity_t *grabber, char *target )
 	}
 }
 
+// Randomizer : I am scared that it will be here to make random mission and/or force power.
 static void G_SetCoreForcePowerLevel(int level)
 {
 	level = min(3, max(0, level));
@@ -1028,6 +1029,7 @@ static void G_SetCoreForcePowerLevel(int level)
 	}
 }
 
+// Randomizer : I am scared that it will be here to make random mission and/or force power.
 static void Svcmd_MissionSelectAny_f()
 {
 	if (gi.argc() <= 1)
