@@ -429,11 +429,19 @@ vmCvar_t	cg_setSeed;
 mt19937 rngRandoBase;
 mt19937 rngRandoEnhancements;
 // Randomizer - evil mode
+//vmCvar_t	cg_enableRandSaberStyle; // No, we will handle Force differently in Academy
 vmCvar_t	cg_enableRandSaberColor;
 vmCvar_t	cg_enableRandSaberLength;
-
-
-
+vmCvar_t	cg_enableRandJumpHeight;
+vmCvar_t	cg_enableRandJumpStrength;
+vmCvar_t	cg_enableRandLanguageVoices;
+vmCvar_t	cg_enableRandTextures;
+vmCvar_t	cg_enableRandWeaponProjectile;
+vmCvar_t	cg_enableRandWeaponProjectileMode;
+vmCvar_t	cg_enableRandNPCSpeed;
+vmCvar_t	cg_enableRandNpcHealth;
+vmCvar_t	cg_enableRandPlayerHealth;
+vmCvar_t	memorized_player_health;
 
 typedef struct {
 	vmCvar_t	*vmCvar;
@@ -668,6 +676,17 @@ static cvarTable_t cvarTable[] = {
 	// Randomizer - evil mode
 	{ &cg_enableRandSaberColor, "cg_enableRandSaberColor", "0", CVAR_ARCHIVE },
 	{ &cg_enableRandSaberLength, "cg_enableRandSaberLength", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandJumpHeight, "cg_enableRandJumpHeight", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandJumpStrength, "cg_enableRandJumpStrength", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandLanguageVoices, "cg_enableRandLanguageVoices", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandTextures, "cg_enableRandTextures", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandWeaponProjectile, "cg_enableRandWeaponProjectile", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandWeaponProjectileMode, "cg_enableRandWeaponProjectileMode", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandNPCSpeed, "cg_enableRandNPCSpeed", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandPlayerHealth, "cg_enableRandPlayerHealth", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandNpcHealth, "cg_enableRandNpcHealth", "0", CVAR_ARCHIVE },
+	// Randomizer : information holder
+	{ &memorized_player_health, "memorized_player_health", "0", CVAR_ARCHIVE },
 };
 
 static int cvarTableSize = sizeof( cvarTable ) / sizeof( cvarTable[0] );

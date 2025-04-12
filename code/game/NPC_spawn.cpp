@@ -250,9 +250,13 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	switch (ent->client->playerTeam) {
 	case TEAM_PLAYER:
 		ent->client->enemyTeam = TEAM_ENEMY;
+		ent->client->clientInfo.team = TEAM_PLAYER;
+		ent->client->sess.sessionTeam = TEAM_PLAYER;
 		break;
 	case TEAM_ENEMY:
 		ent->client->enemyTeam = TEAM_PLAYER;
+		ent->client->clientInfo.team = TEAM_ENEMY;
+		ent->client->sess.sessionTeam = TEAM_ENEMY;
 		break;
 	default: //TODO: AMBER Figure out how to handle this properly
 		if (ent->client->NPC_class == CLASS_PLAYER) // We somehow are TEAM_FREE as the player
@@ -260,6 +264,8 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 			// Rosh is STILL aggroing after cutting the tree.
 			ent->client->playerTeam = TEAM_PLAYER;
 			ent->client->enemyTeam = TEAM_ENEMY;
+			ent->client->clientInfo.team = TEAM_PLAYER;
+			ent->client->sess.sessionTeam = TEAM_PLAYER;
 		}
 		else
 		{
@@ -4734,7 +4740,15 @@ void SP_NPC_Spawn_Random_Humanoid(gentity_t* self) // Used for cutscenes or othe
 void SP_NPC_Player_Random(gentity_t* self)
 {
 	// Let's nooooot touch this, ever, ok ?
-	if (cg_enableRandomizer.integer) SP_NPC_Player(self);
+	if (cg_enableRandomizer.integer)
+	{
+		SP_NPC_Player(self);
+		/*
+		self->client->enemyTeam = TEAM_ENEMY;
+		self->client->clientInfo.team = TEAM_PLAYER;
+		self->client->sess.sessionTeam = TEAM_PLAYER;
+		*/
+	}
 	else SP_NPC_Player(self);
 }
 void SP_NPC_Kyle_Random(gentity_t* self)
@@ -4816,7 +4830,8 @@ void SP_NPC_Rosh_Penin_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random_Humanoid(self);
+		//SP_NPC_Spawn_Random_Humanoid(self);
+		SP_NPC_Rosh_Penin(self);
 	}
 	else SP_NPC_Rosh_Penin(self);
 }

@@ -742,7 +742,19 @@ extern uniform_int_distribution<int> distItems;
 extern uniform_int_distribution<int> distNPC;
 extern uniform_int_distribution<int> distNPC_H;
 // Randomizer - evil mode
-extern vmCvar_t			cg_enableRandSaberColor;
+extern vmCvar_t	cg_enableRandSaberColor;
+extern vmCvar_t	cg_enableRandSaberLength;
+extern vmCvar_t	cg_enableRandJumpHeight;
+extern vmCvar_t	cg_enableRandJumpStrength;
+extern vmCvar_t	cg_enableRandLanguageVoices;
+extern vmCvar_t	cg_enableRandTextures;
+extern vmCvar_t	cg_enableRandWeaponProjectile;
+extern vmCvar_t	cg_enableRandWeaponProjectileMode;
+extern vmCvar_t	cg_enableRandNPCSpeed;
+extern vmCvar_t	cg_enableRandNpcHealth;
+extern vmCvar_t	cg_enableRandPlayerHealth;
+extern vmCvar_t	memorized_player_health;
+
 
 void CG_NewClientinfo( int clientNum );
 //
