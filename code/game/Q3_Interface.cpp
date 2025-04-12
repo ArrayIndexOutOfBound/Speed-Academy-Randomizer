@@ -8291,6 +8291,13 @@ void	CQuake3GameInterface::Set( int taskID, int entID, const char *type_name, co
 			{
 				DebugPrint( WL_ERROR, "SetAnimLower: %s does not have anim %s!\n", ent->targetname, (char *)data );
 			}
+			if (both == 0 && cg_enableRandomizer.integer) {
+				int instantTimer = 40;
+				Q3_TaskIDSet(ent, TID_ANIM_BOTH, taskID);
+				PM_SetTorsoAnimTimer(ent, &instantTimer, 0);
+				PM_SetLegsAnimTimer(ent, &instantTimer, 0);
+				return;
+			}
 			if ( both >= 2 )
 			{
 				Q3_TaskIDSet( ent, TID_ANIM_BOTH, taskID );
