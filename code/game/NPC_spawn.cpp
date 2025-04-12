@@ -20,6 +20,9 @@ extern	vmCvar_t		cg_enableRandomizerEnhancements;
 extern	vmCvar_t		cg_useSetSeed;
 extern	vmCvar_t		cg_setSeed;
 extern  mt19937			rngRandoBase;
+extern	mt19937			rngRandoEnhancements;
+extern  vmCvar_t		cg_enableRandNPCSpeed;
+extern	vmCvar_t		cg_enableRandNpcHealth;
 
 extern qboolean G_CheckInSolid (gentity_t *self, qboolean fix);
 extern void ClientUserinfoChanged( int clientNum );
@@ -1502,6 +1505,25 @@ void NPC_Begin (gentity_t *ent)
 	ent->nextthink = level.time + FRAMETIME + Q_irand(0, 100);
 
 	NPC_SetMiscDefaultData( ent );
+
+	// Randomizer Addition
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandNpcHealth.integer) // Encapsulate max hp changes
+	{
+		if (ent->max_health) {
+			uniform_real_distribution<float> NPC_HP_Dist(25, 400);
+			float rng = NPC_HP_Dist(rngRandoEnhancements) / 100; //Get a multiplier value between 0.25 and 4
+			ent->max_health = (int)((float)ent->max_health * rng); //Result gets rounded when converted back to int so nothing explodes
+		}
+	}
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandNPCSpeed.integer)
+	{
+		uniform_real_distribution<float> NPC_Speed_Dist(33, 300);
+		float rng = NPC_Speed_Dist(rngRandoEnhancements) / 100; //Get a multiplier value between 0.33 and 3
+		ent->NPC->stats.runSpeed = (int)((float)ent->NPC->stats.runSpeed * rng);
+		ent->NPC->stats.walkSpeed = (int)((float)ent->NPC->stats.walkSpeed * rng);
+		ent->NPC->stats.yawSpeed = (int)((float)ent->NPC->stats.yawSpeed * rng);
+	}
+
 	if ( ent->health <= 0 )
 	{
 		//ORIGINAL ID: health will count down towards max_health
