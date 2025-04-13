@@ -304,6 +304,7 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	case CLASS_REBORN:
 	case CLASS_DESANN:
 	case CLASS_SHADOWTROOPER:
+	case CLASS_SABER_DROID:
 		//All saber wielders
 		//ent->client->ps.saberActive = qfalse;
 		ent->client->ps.SaberDeactivate();
@@ -4429,7 +4430,8 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Ugnaught(self);
 		break;
 	case 32:
-		SP_NPC_Jawa(self);
+		//SP_NPC_Jawa(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 33:
 		SP_NPC_Gran(self);
@@ -4539,46 +4541,60 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Droid_Interrogator(self);
 		break;
 	case 66:
-		SP_NPC_Droid_Probe(self);
+		//SP_NPC_Droid_Probe(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 67:
-		SP_NPC_Droid_Mark1(self);
+		//SP_NPC_Droid_Mark1(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 68:
-		SP_NPC_Droid_Mark2(self);
+		//SP_NPC_Droid_Mark2(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 69:
-		SP_NPC_Droid_ATST(self);
+		//SP_NPC_Droid_ATST(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 70:
-		SP_NPC_Droid_Seeker(self);
+		//SP_NPC_Droid_Seeker(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 71:
-		SP_NPC_Droid_Remote(self);
+		//SP_NPC_Droid_Remote(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 72:
-		SP_NPC_Droid_Sentry(self);
+		//SP_NPC_Droid_Sentry(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 73:
-		SP_NPC_Droid_Gonk(self);
+		//SP_NPC_Droid_Gonk(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 74:
-		SP_NPC_Droid_Mouse(self);
+		//SP_NPC_Droid_Mouse(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 75:
-		SP_NPC_Droid_R2D2(self);
+		//SP_NPC_Droid_R2D2(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 76:
-		SP_NPC_Droid_R5D2(self);
+		//SP_NPC_Droid_R5D2(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 77:
-		SP_NPC_Droid_Protocol(self);
+		//SP_NPC_Droid_Protocol(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 78:
-		SP_NPC_Droid_Assassin(self);
+		//SP_NPC_Droid_Assassin(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 79:
-		SP_NPC_Droid_Saber(self);
+		//SP_NPC_Droid_Saber(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	default:
 		// Impossible
@@ -4691,7 +4707,9 @@ void SP_NPC_Spawn_Random_Humanoid(gentity_t* self) // Used for cutscenes or othe
 		SP_NPC_Ugnaught(self);
 		break;
 	case 31:
-		SP_NPC_Jawa(self);
+		//SP_NPC_Jawa(self);
+		// Not an humanoid
+		SP_NPC_Spawn_Random_Humanoid(self);
 		break;
 	case 32:
 		SP_NPC_Gran(self);
