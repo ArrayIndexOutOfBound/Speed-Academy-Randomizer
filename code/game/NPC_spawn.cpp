@@ -4512,7 +4512,8 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Monster_Wampa(self);
 		break;
 	case 58:
-		SP_NPC_Monster_Claw(self);
+		//SP_NPC_Monster_Claw(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 59:
 		//SP_NPC_Monster_Glider(self);
@@ -4535,10 +4536,12 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Spawn_Random(self);
 		break;
 	case 64:
-		SP_NPC_MineMonster(self);
+		//SP_NPC_MineMonster(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 65:
-		SP_NPC_Droid_Interrogator(self);
+		//SP_NPC_Droid_Interrogator(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 66:
 		//SP_NPC_Droid_Probe(self);

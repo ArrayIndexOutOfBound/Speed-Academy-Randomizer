@@ -11,6 +11,9 @@
 
 #include "..\speedrun\speedrun_timer_q3\timer.h"
 
+// Randomizer addition
+#include <random>
+
 /*
 ===============================================================================
 
@@ -61,6 +64,124 @@ static bool SV_Map_( ForceReload_e eForceReload )
 		Com_Printf ("Can't have mapnames with a \\\n");
 		return false;
 	}
+
+	// Randomizer : here is the REAL pinpoint to get a random t1-t2-t3 map
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer"))
+	{
+		mt19937 rngRandoEnhancements;
+		rngRandoEnhancements.seed(std::time(nullptr));
+		int numberOfMaps = 5;
+		uniform_int_distribution<int> mapsDist(0, numberOfMaps - 1);
+		int rngMaps = mapsDist(rngRandoEnhancements);
+		bool isNewMap = false;
+		string mapList = Cvar_VariableString("tiers_complete");
+
+		if (strcmp(map, "t1_random") == 0)
+		{
+			while (!isNewMap)
+			{
+				switch (rngMaps)
+				{
+				case 0:
+					map = "t1_sour";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 1:
+					map = "t1_rail";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 2:
+					map = "t1_danger";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 3:
+					map = "t1_fatal";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 4:
+					map = "t1_surprise";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				default:
+					// Shouldn't happen
+					break;
+				}
+				rngMaps = mapsDist(rngRandoEnhancements);
+			}
+		}
+		else if (strcmp(map, "t2_random") == 0)
+		{
+			while (!isNewMap)
+			{
+				switch (rngMaps)
+				{
+				case 0:
+					map = "t2_rancor";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 1:
+					map = "t2_trip";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 2:
+					map = "t2_wedge";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 3:
+					map = "t2_rogue";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 4:
+					map = "t2_dpred";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				default:
+					// Shouldn't happen
+					break;
+				}
+				rngMaps = mapsDist(rngRandoEnhancements);
+			}
+		}
+		else if (strcmp(map, "t3_random") == 0)
+		{
+			while (!isNewMap)
+			{
+				switch (rngMaps)
+				{
+				case 0:
+					map = "t3_stamp";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 1:
+					map = "t3_bounty";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 2:
+					map = "t3_hevil";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 3:
+					map = "t3_byss";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				case 4:
+					map = "t3_rift";
+					if (mapList.find(map) == std::string::npos) isNewMap = true;
+					break;
+				default:
+					// Shouldn't happen
+					break;
+				}
+				rngMaps = mapsDist(rngRandoEnhancements);
+			}
+		}
+		else
+		{
+			//  Can happen !
+			Com_Printf("Randomizer : this is NOT a random map : %s\n", map);
+		}
+	}
+
 
 #ifndef _XBOX	// Could check for maps/%s/brushes.mle or something...
 	Com_sprintf (expanded, sizeof(expanded), "maps/%s.bsp", map);
@@ -204,6 +325,7 @@ void SV_Player_EndOfLevelSave(void)
 //extern void	SCR_PrecacheScreenshot();  //scr_scrn.cpp
 static void SV_MapTransition_f(void)
 {		
+	// Randomizer addition : it might be here that I can make a random map load
 	char	*spawntarget;
 
 	SpeedrunLevelFinished(sv_speedrunModeIL->integer);

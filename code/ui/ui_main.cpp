@@ -1003,6 +1003,8 @@ static qboolean UI_RunMenuScript ( const char **args )
 		} 
 		else if (Q_stricmp(name, "startmap") == 0) 
 		{
+			// Randomizer addition : it might be here that I can make a random map load
+
 			Menus_CloseAll();
 
 			String_Parse(args, &mapName);
@@ -1297,6 +1299,8 @@ static qboolean UI_RunMenuScript ( const char **args )
 		}
 		else if (Q_stricmp(name, "loadmissionselectmenu") == 0) 
 		{
+			// Randomizer addition : this is here that we will get the mission list
+			// tiers_complete = "t1_sour t1_rail t1_inter" : this is how the game knows which map has been done.
 			const char *cvarName;
 			String_Parse(args, &cvarName);
 
@@ -1307,6 +1311,7 @@ static qboolean UI_RunMenuScript ( const char **args )
 		}
 		else if (Q_stricmp(name, "missionselectanynext") == 0)
 		{
+			// Randomizer addition : this is here that we will get something (need to check what exactly)
 			UI_MissionSelectAnyNext();
 		}
 		else if (Q_stricmp(name, "calcforcestatus") == 0) 
