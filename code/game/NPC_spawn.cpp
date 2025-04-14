@@ -252,22 +252,15 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 		ent->client->enemyTeam = TEAM_ENEMY;
 		break;
 	case TEAM_ENEMY:
+	case TEAM_FREE:
 		ent->client->enemyTeam = TEAM_PLAYER;
-		break;
-	default: //TODO: AMBER Figure out how to handle this properly
-		if (ent->client->NPC_class == CLASS_PLAYER) // We somehow are TEAM_FREE as the player
-		{
-			// Rosh is STILL aggroing after cutting the tree.
-			ent->client->playerTeam = TEAM_PLAYER;
-			ent->client->enemyTeam = TEAM_ENEMY;
-		}
-		else
-		{
-			// Never happens ? I put a breakpoint here that never triggers
-			ent->client->enemyTeam = TEAM_FREE;
-		}
-		
+		break;	
 	}
+
+	if (ent->client->enemyTeam == TEAM_NEUTRAL) {
+		ent->client->enemyTeam = TEAM_PLAYER; //If enemy is TEAM_NEUTRAL we'll never aggro so default to targeting player
+	}
+
 	//***I'm not sure whether I should leave this as a TEAM_ switch, I think NPC_class may be more appropriate - dmv
 	//Amber - whoever dmv is they're right, this should be based on class
 	switch (ent->client->NPC_class) {
@@ -303,7 +296,6 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 		WP_SaberInitBladeData(ent);
 		WP_SaberAddG2SaberModels(ent);
 		//G_CreateG2AttachedWeaponModel(ent, ent->client->ps.saber->model, 1, 1);
-		ent->client->enemyTeam = TEAM_ENEMY;
 		WP_InitForcePowers(ent);
 		Jedi_ClearTimers(ent);
 		if (ent->spawnflags & JSF_AMBUSH)
@@ -4482,7 +4474,8 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Monster_Wampa(self);
 		break;
 	case 58:
-		SP_NPC_Monster_Claw(self);
+		//SP_NPC_Monster_Claw(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 59:
 		//SP_NPC_Monster_Glider(self);
