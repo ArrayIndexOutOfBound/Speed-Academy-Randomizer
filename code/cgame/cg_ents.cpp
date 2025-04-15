@@ -2023,7 +2023,13 @@ extern cvar_t	*g_saberRealisticCombat;
 					if ( newBolt != -1 )
 					{
 						cent->gent->delay = cg.time + 50;
-						CG_PlayEffectBolted( "saber/limb_bolton", owner->playerModel, newBolt, owner->s.number, owner->s.origin );	//ent origin used to make FX culling work
+						//limb_bolton doesn't exist so use smoke_bolton like JKO
+						if (cg_enableRandomizer.integer) {
+							CG_PlayEffectBolted("blaster/smoke_bolton", owner->playerModel, newBolt, owner->s.number, owner->s.origin);	//ent origin used to make FX culling work
+						}
+						else {
+							CG_PlayEffectBolted("saber/limb_bolton", owner->playerModel, newBolt, owner->s.number, owner->s.origin);	//ent origin used to make FX culling work
+						}						
 					}
 				}
 			}
