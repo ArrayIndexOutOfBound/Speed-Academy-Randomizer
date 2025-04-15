@@ -2739,8 +2739,20 @@ void NPC_SetAnim(gentity_t	*ent,int setAnimParts,int anim,int setAnimFlags, int 
 			}
 		}
 
-		PM_SetAnimFinal(&ent->client->ps.torsoAnim,&ent->client->ps.legsAnim,setAnimParts,anim,setAnimFlags,
-			&ent->client->ps.torsoAnimTimer,&ent->client->ps.legsAnimTimer,ent, iBlend );
+		// Randomizer : we someone are trying to create animation while not having ANY NPC_Class ?????
+		if (cg_enableRandomizer.integer)
+		{
+			if (ent->client->NPC_class != CLASS_NONE)
+			{
+				PM_SetAnimFinal(&ent->client->ps.torsoAnim, &ent->client->ps.legsAnim, setAnimParts, anim, setAnimFlags,
+					&ent->client->ps.torsoAnimTimer, &ent->client->ps.legsAnimTimer, ent, iBlend);
+			}
+		}
+		else
+		{
+			PM_SetAnimFinal(&ent->client->ps.torsoAnim, &ent->client->ps.legsAnim, setAnimParts, anim, setAnimFlags,
+				&ent->client->ps.torsoAnimTimer, &ent->client->ps.legsAnimTimer, ent, iBlend);
+		}
 	}
 	else
 	{//bodies, etc.

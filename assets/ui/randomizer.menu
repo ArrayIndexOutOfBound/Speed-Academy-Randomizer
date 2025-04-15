@@ -30,9 +30,9 @@
 			hide 				assists ;
 			setfocus			basic;
 			setitemcolor		basicmenubutton forecolor 1 1 1 1;
-			setitemcolor		enhancements1menubutton forecolor 0.65 0.65 1 1;
-			setitemcolor		enhancements2menubutton forecolor 0.65 0.65 1 1;
-			setitemcolor		assistsmenubutton forecolor 0.65 0.65 1 1;
+			setitemcolor		enhancements1menubutton forecolor 1 .682 0 1;
+			setitemcolor		enhancements2menubutton forecolor 1 .682 0 1;
+			setitemcolor		assistsmenubutton forecolor 1 .682 0 1;
 		}
 			
 		onESC 
@@ -164,7 +164,7 @@
 			textscale			1.1
 			textaligny			0
 			textalign			ITEM_ALIGN_CENTER
-			textstyle			1
+			textstyle			3
 			textalignx			65
 			backcolor			0 0 0 0
 			forecolor			1 1 1 1
@@ -219,10 +219,10 @@
 			font				3
 			textscale			1
 			textalign			ITEM_ALIGN_CENTER
-			textstyle			1
+			textstyle			3
 			textalignx			65
 			textaligny			-1
-			forecolor			0.65 0.65 1 1
+			forecolor			1 .682 0 1
 			visible			1
 
 			mouseEnter 
@@ -274,7 +274,7 @@
 			name				basic_glow
 			group				highlights
 			style				WINDOW_STYLE_SHADER
-			rect				120 173 170 30
+			rect				80 183 170 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -289,14 +289,14 @@
 			text				BASIC
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				120 173 170 30
+			rect				80 183 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
 			textaligny			5
-			textstyle			1
+			textstyle			3
 			textalign			ITEM_ALIGN_RIGHT
-			forecolor			0.65 0.65 1 1
+			forecolor			1 .682 0 1
 			visible			1
 			descText			"Basic Randomizer Settings - Speedrun compliant"
 
@@ -320,10 +320,10 @@
 				hide 			assists ;
 				setfocus		basic ;
 				setitemcolor	basicmenubutton forecolor 1 1 1 1;
-				setitemcolor	enhancements_cosmetics_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_force_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_evil_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	assists_menubutton forecolor 0.65 0.65 1 1;
+				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
+				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
 			}
 		}
 
@@ -333,7 +333,7 @@
 			name				enhancements_cosmetics_glow
 			group				highlights
 			style				WINDOW_STYLE_SHADER
-			rect				120 233 170 30
+			rect				80 243 170 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -348,14 +348,14 @@
 			text				"Cosmetics"
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				120 233 170 30
+			rect				80 243 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
 			textaligny			5
-			textstyle			1
+			textstyle			3
 			textalign			ITEM_ALIGN_RIGHT
-			forecolor			0.65 0.65 1 1
+			forecolor			1 .682 0 1
 			visible			1
 			descText			"Randomizer Enhancements - Cosmetics"
 
@@ -378,11 +378,11 @@
 				hide 			enhancements_evil ;
 				hide 			assists ;
 				setfocus		enhancements_cosmetics ;
-				setitemcolor	basicmenubutton forecolor 0.65 0.65 1 1;
+				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 1 1 1;
-				setitemcolor	enhancements_force_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_evil_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	assists_menubutton forecolor 0.65 0.65 1 1;
+				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
+				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
 			}
 		}
 
@@ -392,7 +392,7 @@
 			name				enhancements_force_glow
 			group				highlights
 			style				WINDOW_STYLE_SHADER
-			rect				120 263 170 30
+			rect				80 273 170 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -407,14 +407,14 @@
 			text				"Force"
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				120 263 170 30
+			rect				80 273 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
 			textaligny			5
-			textstyle			1
+			textstyle			3
 			textalign			ITEM_ALIGN_RIGHT
-			forecolor			0.65 0.65 1 1
+			forecolor			1 .682 0 1
 			visible			1
 			descText			"Randomizer Enhancements - Force"
 
@@ -437,11 +437,11 @@
 				hide 			enhancements_evil ;
 				hide 			assists ;
 				setfocus		enhancements_force ;
-				setitemcolor	basicmenubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_cosmetics_menubutton forecolor 0.65 0.65 1 1;
+				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_force_menubutton forecolor 1 1 1 1;
-				setitemcolor	enhancements_evil_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	assists_menubutton forecolor 0.65 0.65 1 1;
+				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
+				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
 			}
 		}
 		
@@ -451,7 +451,7 @@
 			name				enhancements_evil_glow
 			group				highlights
 			style				WINDOW_STYLE_SHADER
-			rect				120 293 170 30
+			rect				80 303 170 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -467,14 +467,14 @@
 			text				"Evil / Chaos"
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				120 293 170 30
+			rect				80 303 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
 			textaligny			5
-			textstyle			1
+			textstyle			3
 			textalign			ITEM_ALIGN_RIGHT
-			forecolor			0.65 0.65 1 1
+			forecolor			1 .682 0 1
 			visible			1
 			descText			"Randomizer Enhancements - Evil and Chaos"
 
@@ -497,11 +497,11 @@
 				show 			enhancements_evil ;
 				hide 			assists ;
 				setfocus		enhancements_evil ;
-				setitemcolor	basicmenubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_cosmetics_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_force_menubutton forecolor 0.65 0.65 1 1;
+				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_evil_menubutton forecolor 1 1 1 1;
-				setitemcolor	assists_menubutton forecolor 0.65 0.65 1 1;
+				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
 			}
 		}
 
@@ -511,7 +511,7 @@
 			name				assists_glow
 			group				highlights
 			style				WINDOW_STYLE_SHADER
-			rect				120 323 170 30
+			rect				80 333 170 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -526,14 +526,14 @@
 			text				"Assists"
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				120 323 170 30
+			rect				80 333 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
 			textaligny			5
-			textstyle			1
+			textstyle			3
 			textalign			ITEM_ALIGN_RIGHT
-			forecolor			0.65 0.65 1 1
+			forecolor			1 .682 0 1
 			visible			1
 			descText			"Randomizer Enhancements - Assists"
 
@@ -556,25 +556,38 @@
 				hide 			enhancements_evil ;
 				show 			assists ;
 				setfocus		assists ;
-				setitemcolor	basicmenubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_cosmetics_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_force_menubutton forecolor 0.65 0.65 1 1;
-				setitemcolor	enhancements_evil_menubutton forecolor 0.65 0.65 1 1;
+				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
 				setitemcolor	assists_menubutton forecolor 1 1 1 1;
 			}
 		}
 
-		itemDef 
+		//itemDef 
+		//{
+		//	name				randomizer_background
+		//	group				none
+		//	style				WINDOW_STYLE_SHADER
+		//	rect				250 171 350 250	
+		//	//background			"gfx/menus/menu_box1"					// Frame
+		//	background 			"gfx/menus/menu_blendbox2"
+		//	forecolor			1 1 1 1
+		//	visible				0
+		//	decoration
+		//}
+		itemDef
 		{
 			name				randomizer_background
 			group				none
-			style				WINDOW_STYLE_SHADER
-			rect				300 171 300 250	
-			//background			"gfx/menus/menu_box1"					// Frame
+			style				WINDOW_STYLE_FILLED
+			rect				260 185 340 225	
+			backcolor			0 0 .6 .5
 			forecolor			1 1 1 1
-			visible				0
-			decoration
+			border				1
+			bordercolor			0 0 .6 1
 		}
+		
 
 		//----------------------------------------------------------------------------------------------
 		//

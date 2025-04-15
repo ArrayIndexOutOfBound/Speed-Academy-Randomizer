@@ -20,6 +20,9 @@ extern	vmCvar_t		cg_enableRandomizerEnhancements;
 extern	vmCvar_t		cg_useSetSeed;
 extern	vmCvar_t		cg_setSeed;
 extern  mt19937			rngRandoBase;
+extern	mt19937			rngRandoEnhancements;
+extern  vmCvar_t		cg_enableRandNPCSpeed;
+extern	vmCvar_t		cg_enableRandNpcHealth;
 
 extern qboolean G_CheckInSolid (gentity_t *self, qboolean fix);
 extern void ClientUserinfoChanged( int clientNum );
@@ -250,6 +253,8 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	switch (ent->client->playerTeam) {
 	case TEAM_PLAYER:
 		ent->client->enemyTeam = TEAM_ENEMY;
+		ent->client->clientInfo.team = TEAM_PLAYER;
+		ent->client->sess.sessionTeam = TEAM_PLAYER;
 		break;
 	case TEAM_ENEMY:
 	case TEAM_FREE:
@@ -288,6 +293,7 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	case CLASS_REBORN:
 	case CLASS_DESANN:
 	case CLASS_SHADOWTROOPER:
+	case CLASS_SABER_DROID:
 		//All saber wielders
 		//ent->client->ps.saberActive = qfalse;
 		ent->client->ps.SaberDeactivate();
@@ -1488,6 +1494,25 @@ void NPC_Begin (gentity_t *ent)
 	ent->nextthink = level.time + FRAMETIME + Q_irand(0, 100);
 
 	NPC_SetMiscDefaultData( ent );
+
+	// Randomizer Addition
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandNpcHealth.integer) // Encapsulate max hp changes
+	{
+		if (ent->max_health) {
+			uniform_real_distribution<float> NPC_HP_Dist(25, 400);
+			float rng = NPC_HP_Dist(rngRandoEnhancements) / 100; //Get a multiplier value between 0.25 and 4
+			ent->max_health = (int)((float)ent->max_health * rng); //Result gets rounded when converted back to int so nothing explodes
+		}
+	}
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandNPCSpeed.integer)
+	{
+		uniform_real_distribution<float> NPC_Speed_Dist(33, 300);
+		float rng = NPC_Speed_Dist(rngRandoEnhancements) / 100; //Get a multiplier value between 0.33 and 3
+		ent->NPC->stats.runSpeed = (int)((float)ent->NPC->stats.runSpeed * rng);
+		ent->NPC->stats.walkSpeed = (int)((float)ent->NPC->stats.walkSpeed * rng);
+		ent->NPC->stats.yawSpeed = (int)((float)ent->NPC->stats.yawSpeed * rng);
+	}
+
 	if ( ent->health <= 0 )
 	{
 		//ORIGINAL ID: health will count down towards max_health
@@ -4393,7 +4418,8 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Ugnaught(self);
 		break;
 	case 32:
-		SP_NPC_Jawa(self);
+		//SP_NPC_Jawa(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 33:
 		SP_NPC_Gran(self);
@@ -4498,52 +4524,68 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Spawn_Random(self);
 		break;
 	case 64:
-		SP_NPC_MineMonster(self);
+		//SP_NPC_MineMonster(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 65:
-		SP_NPC_Droid_Interrogator(self);
+		//SP_NPC_Droid_Interrogator(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 66:
-		SP_NPC_Droid_Probe(self);
+		//SP_NPC_Droid_Probe(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 67:
-		SP_NPC_Droid_Mark1(self);
+		//SP_NPC_Droid_Mark1(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 68:
-		SP_NPC_Droid_Mark2(self);
+		//SP_NPC_Droid_Mark2(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 69:
-		SP_NPC_Droid_ATST(self);
+		//SP_NPC_Droid_ATST(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 70:
-		SP_NPC_Droid_Seeker(self);
+		//SP_NPC_Droid_Seeker(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 71:
-		SP_NPC_Droid_Remote(self);
+		//SP_NPC_Droid_Remote(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 72:
-		SP_NPC_Droid_Sentry(self);
+		//SP_NPC_Droid_Sentry(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 73:
-		SP_NPC_Droid_Gonk(self);
+		//SP_NPC_Droid_Gonk(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 74:
-		SP_NPC_Droid_Mouse(self);
+		//SP_NPC_Droid_Mouse(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 75:
-		SP_NPC_Droid_R2D2(self);
+		//SP_NPC_Droid_R2D2(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 76:
-		SP_NPC_Droid_R5D2(self);
+		//SP_NPC_Droid_R5D2(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 77:
-		SP_NPC_Droid_Protocol(self);
+		//SP_NPC_Droid_Protocol(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 78:
-		SP_NPC_Droid_Assassin(self);
+		//SP_NPC_Droid_Assassin(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 79:
-		SP_NPC_Droid_Saber(self);
+		//SP_NPC_Droid_Saber(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	default:
 		// Impossible
@@ -4656,7 +4698,9 @@ void SP_NPC_Spawn_Random_Humanoid(gentity_t* self) // Used for cutscenes or othe
 		SP_NPC_Ugnaught(self);
 		break;
 	case 31:
-		SP_NPC_Jawa(self);
+		//SP_NPC_Jawa(self);
+		// Not an humanoid
+		SP_NPC_Spawn_Random_Humanoid(self);
 		break;
 	case 32:
 		SP_NPC_Gran(self);
@@ -4727,7 +4771,15 @@ void SP_NPC_Spawn_Random_Humanoid(gentity_t* self) // Used for cutscenes or othe
 void SP_NPC_Player_Random(gentity_t* self)
 {
 	// Let's nooooot touch this, ever, ok ?
-	if (cg_enableRandomizer.integer) SP_NPC_Player(self);
+	if (cg_enableRandomizer.integer)
+	{
+		SP_NPC_Player(self);
+		/*
+		self->client->enemyTeam = TEAM_ENEMY;
+		self->client->clientInfo.team = TEAM_PLAYER;
+		self->client->sess.sessionTeam = TEAM_PLAYER;
+		*/
+	}
 	else SP_NPC_Player(self);
 }
 void SP_NPC_Kyle_Random(gentity_t* self)
@@ -4809,7 +4861,8 @@ void SP_NPC_Rosh_Penin_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random_Humanoid(self);
+		//SP_NPC_Spawn_Random_Humanoid(self);
+		SP_NPC_Rosh_Penin(self);
 	}
 	else SP_NPC_Rosh_Penin(self);
 }

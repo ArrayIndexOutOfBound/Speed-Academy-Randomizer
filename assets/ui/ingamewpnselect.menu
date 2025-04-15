@@ -1442,7 +1442,7 @@
 		{
 			name					backbut
 			type					ITEM_TYPE_BUTTON
-			rect					30 447 140 24
+			rect					30 447 100 24
 			text					@MENUS_HELP
 			font					2
 			forecolor				1 .682 0 1
@@ -1466,6 +1466,48 @@
 				open				ingameWpnSelectHelp
 			}
 		}
+		
+		
+		//	RANDOM BUTTONS AND BUTTON GRAPHICS
+		itemDef 
+		{
+			name				random_rifle_button
+			type				ITEM_TYPE_BUTTON
+			rect				130 447 100 24
+			forecolor			1 .682 0 1
+			visible				1
+			textscale			1
+			font				2
+			text				"Get Rifle"
+			desctext			"Get a rifle (use this twice for canon reasons)"
+			// Increment random force power
+			action
+			{	// hide descriptions and let affectforcepowerlevel determine the corect one
+				uiScript  		"addweaponselection" "99" "5" "10"	"rocket_icon"	"rocket_icon_lit"	"rocket_hex_background"  "sound/weapons/rocket/select.wav"
+			}
+		}
+		
+		//	RANDOM BUTTONS AND BUTTON GRAPHICS
+		itemDef 
+		{
+			name				random_explosive_button
+			type				ITEM_TYPE_BUTTON
+			rect				210 447 100 24
+			forecolor			1 .682 0 1
+			visible				1
+			textscale			1
+			font				2
+			text				"Get Explosive"
+			desctext			"Get a explosive (use this once for canon reasons)"
+			
+			action
+			{	// hide descriptions and let affectforcepowerlevel determine the corect one
+				uiScript  		"addthrowweaponselection" "99" "8" "5" "tripmine_icon"	"tripmine_icon_lit" "tripmine_hex_background"  "sound/weapons/detpack/select.wav"
+			}
+		}
+		
+		
+		
 		
 
 		// Don't change the name of this, code looks for this name to turn it on and off

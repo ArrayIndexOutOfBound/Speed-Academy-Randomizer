@@ -4289,7 +4289,7 @@ static void CG_Draw2D( void )
 	}
 
 	// Randomizer addition
-	if (cg_enableRandomizer.integer && cg_drawSeed.integer)
+	if (cg_drawSeed.integer)
 	{
 		CG_DrawSeed(y);
 	}

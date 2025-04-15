@@ -969,6 +969,55 @@
 //----------------------------------------------------------------------------------------------
 // ACCEPT BUTTONS - IF YOU CHOOSE A PARTICULAR MISSION
 //----------------------------------------------------------------------------------------------
+
+// Randomizer bouton
+		itemDef
+		{
+			name				accbutrandom3
+			group				accbuttons
+			type				ITEM_TYPE_BUTTON
+			rect				52 440 150 20
+			text				Random T3
+			desctext			"Select a random mission of t3"
+			font				2
+			forecolor			1 .682 0 1
+			textscale			.7
+			textalign			ITEM_ALIGN_LEFT
+			textalignx			8
+			textaligny			-1
+			visible				1
+			mouseEnter 
+			{ 
+				show			button_glow
+				setitemrect		button_glow	200 430 200 20
+			}
+			mouseExit 
+			{ 
+				hide			button_glow
+			}
+			
+			action
+			{
+				hide			backbut
+				hide			briefing_text
+				show			kyle
+				show			nextscreen_button
+				show			accept1text
+				//playVoice		"sound/chars/kyle/07kyk001.mp3"
+				hide 			accbuttons
+				setfocus		nextscreen_button
+				setcvar 		tier_mapname "maptransition t3_random"
+				hide			button_glow
+				hide			briefing_background
+				hide			mission_button
+				hide			location_marker_on
+				hide			map_title
+			}
+		}
+
+
+
+
 		itemDef
 		{
 			name				accbut1
