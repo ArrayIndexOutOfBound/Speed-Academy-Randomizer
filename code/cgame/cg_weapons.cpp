@@ -242,7 +242,13 @@ void CG_RegisterWeapon( int weaponNum ) {
 		theFxScheduler.RegisterEffect( "force/force_touch" );
 		theFxScheduler.RegisterEffect( "saber/saber_block" );
 		theFxScheduler.RegisterEffect( "saber/saber_cut" );
-		theFxScheduler.RegisterEffect( "saber/limb_bolton" );
+		//limb_bolton doesn't exist so use smoke_bolton like JKO
+		if (cg_enableRandomizer.integer) {
+			theFxScheduler.RegisterEffect("blaster/smoke_bolton");
+		}
+		else {
+			theFxScheduler.RegisterEffect("saber/limb_bolton");
+		}
 		theFxScheduler.RegisterEffect( "saber/fizz" );
 		theFxScheduler.RegisterEffect( "saber/boil" );
 		theFxScheduler.RegisterEffect( "saber/fire" );//was "sparks/spark"
