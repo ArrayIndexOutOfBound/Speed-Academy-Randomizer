@@ -5,3 +5,8 @@ I will try to make sure assets_randomizer.pk3 in this folder is up to date, if y
 If you want to add a new folder to the pk3 then update the PATH argument in BundleAssets.ps1 to include the new folder.
 
 //TODO: Look at creating a github action that auto-generates this file for releases
+
+Todo textures : 
+- Crystal droped by shadowtrooper
+- 3D model and effect register for ATST weapons (can be used by the player)
+- 3D model for saberthrow

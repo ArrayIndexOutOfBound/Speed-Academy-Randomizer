@@ -1003,8 +1003,6 @@ static qboolean UI_RunMenuScript ( const char **args )
 		} 
 		else if (Q_stricmp(name, "startmap") == 0) 
 		{
-			// Randomizer addition : it might be here that I can make a random map load
-
 			Menus_CloseAll();
 
 			String_Parse(args, &mapName);

@@ -4816,6 +4816,18 @@ void SP_NPC_Kyle_Random(gentity_t* self)
 			}
 		}
 		*/
+		/*
+		if (strcmp(lastKnownMap, "vjun1") == 0) // Give the NPC that will replace Kyle Force protect or he will die by the rain
+		{
+			// behaviorSet	0x7ac7d2e8 {0x14cd3e7c "vjun1/kyle_follows", 0x00000000 <NULL>, 0x00000000 <NULL>, 0x00000000 <NULL>, ...}	char *[17]
+			//SP_NPC_Spawn_Random_Humanoid(self);
+			// Client does not exist yet, can't allocate force power here
+			//self->client->ps.forcePowersKnown |= (1 << FP_PROTECT);
+			//self->client->ps.forcePowerLevel[FP_PROTECT] = FORCE_LEVEL_3;
+			//self->client->ps.forcePower = 100;
+			return;
+		}
+		*/
 		SP_NPC_Spawn_Random_Humanoid(self);
 	}
 	else SP_NPC_Kyle(self);
@@ -4861,8 +4873,8 @@ void SP_NPC_Rosh_Penin_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		//SP_NPC_Spawn_Random_Humanoid(self);
-		SP_NPC_Rosh_Penin(self);
+		SP_NPC_Spawn_Random_Humanoid(self);
+		//SP_NPC_Rosh_Penin(self);
 	}
 	else SP_NPC_Rosh_Penin(self);
 }
