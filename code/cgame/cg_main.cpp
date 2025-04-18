@@ -1491,8 +1491,8 @@ static void CG_RegisterEffects( void )
 
 		if (!theFxScheduler.RegisterEffect( (const char*)effectName ))
 		{
-			// Randomizer, skip some effects
-			if (cg_enableRandomizer.integer && (strcmp(effectName, "force/destruction_exp") == 0))
+			// Randomizer, skip some effects, that's ok
+			if (cg_enableRandomizer.integer)
 			{
 
 			}

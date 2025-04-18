@@ -4491,10 +4491,14 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Spawn_Random(self);
 		break;
 	case 55:
-		SP_NPC_Monster_Rancor(self);
+		//SP_NPC_Monster_Rancor(self);
+		// No more
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 56:
-		SP_NPC_Monster_Mutant_Rancor(self);
+		//SP_NPC_Monster_Mutant_Rancor(self);
+		// No more
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 57:
 		SP_NPC_Monster_Wampa(self);
@@ -5324,7 +5328,9 @@ void SP_NPC_Monster_Rancor_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+		//SP_NPC_Spawn_Random(self);
+		// disabled rancors for the rando, but keep the normal ones
+		SP_NPC_Monster_Rancor(self);
 	}
 	else SP_NPC_Monster_Rancor(self);
 }
@@ -5333,7 +5339,9 @@ void SP_NPC_Monster_Mutant_Rancor_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+		//SP_NPC_Spawn_Random(self);
+		// disabled rancors for the rando, but keep the normal ones
+		SP_NPC_Monster_Mutant_Rancor(self);
 	}
 	else SP_NPC_Monster_Mutant_Rancor(self);
 }
@@ -5513,7 +5521,10 @@ void SP_NPC_Droid_R5D2_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+
+		if (strcmp(lastKnownMap,"t1_surprise") == 0) SP_NPC_Droid_R5D2(self);
+		else SP_NPC_Spawn_Random(self);
+
 	}
 	else SP_NPC_Droid_R5D2(self);
 }
