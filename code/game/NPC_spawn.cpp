@@ -4950,7 +4950,8 @@ void SP_NPC_BobaFett_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+		//SP_NPC_Spawn_Random(self);
+		SP_NPC_BobaFett(self);
 	}
 	else SP_NPC_BobaFett(self);
 }
@@ -4965,6 +4966,8 @@ void SP_NPC_Ragnos_Random(gentity_t* self)
 }
 void SP_NPC_Lannik_Racto_Random(gentity_t* self)
 {
+	// Fix me : in t2_rogue, the droids have a strange AI in seed 3804079049.
+	// One of them despawn instead of dying, making a softlock
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
