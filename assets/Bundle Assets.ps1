@@ -1,6 +1,6 @@
-﻿if(Get-Item assets_randomizer.pk3)
+﻿if(Get-Item assets_speedacademy_randomizer.pk3)
 {
-    Remove-Item assets_randomizer.pk3
+    Remove-Item assets_speedacademy_randomizer.pk3
 }
 
 $compress = @{
