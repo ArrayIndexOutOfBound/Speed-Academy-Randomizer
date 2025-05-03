@@ -70,7 +70,9 @@ static bool SV_Map_( ForceReload_e eForceReload )
 	{
 		mt19937 rngRandoEnhancements;
 		rngRandoEnhancements.seed(std::time(nullptr));
-		int numberOfMaps = 5;
+		int numberOfMaps = 0;
+		if (Cvar_VariableIntegerValue("cg_enableRandAllMissions")) numberOfMaps = 15;
+		else numberOfMaps = 5;
 		uniform_int_distribution<int> mapsDist(0, numberOfMaps - 1);
 		int rngMaps = mapsDist(rngRandoEnhancements);
 		bool isNewMap = false;
@@ -78,101 +80,330 @@ static bool SV_Map_( ForceReload_e eForceReload )
 
 		if (strcmp(map, "t1_random") == 0)
 		{
-			while (!isNewMap)
+			if (!Cvar_VariableIntegerValue("cg_enableRandAllMissions"))
 			{
-				switch (rngMaps)
+				while (!isNewMap)
 				{
-				case 0:
-					map = "t1_sour";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 1:
-					map = "t1_rail";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 2:
-					map = "t1_danger";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 3:
-					map = "t1_fatal";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 4:
-					map = "t1_surprise";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				default:
-					// Shouldn't happen
-					break;
+					switch (rngMaps)
+					{
+					case 0:
+						map = "t1_sour";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 1:
+						map = "t1_rail";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 2:
+						map = "t1_danger";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 3:
+						map = "t1_fatal";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 4:
+						map = "t1_surprise";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					default:
+						// Shouldn't happen
+						break;
+					}
+					rngMaps = mapsDist(rngRandoEnhancements);
 				}
-				rngMaps = mapsDist(rngRandoEnhancements);
 			}
+			else // All missions can be loaded anytime !!!
+			{
+				while (!isNewMap)
+				{
+					switch (rngMaps)
+					{
+					case 0:
+						map = "t1_sour";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 1:
+						map = "t1_rail";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 2:
+						map = "t1_danger";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 3:
+						map = "t1_fatal";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 4:
+						map = "t1_surprise";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 5:
+						map = "t2_rancor";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 6:
+						map = "t2_trip";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 7:
+						map = "t2_wedge";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 8:
+						map = "t2_rogue";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 9:
+						map = "t2_dpred";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 10:
+						map = "t3_stamp";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 11:
+						map = "t3_bounty";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 12:
+						map = "t3_hevil";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 13:
+						map = "t3_byss";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 14:
+						map = "t3_rift";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					default:
+						// Shouldn't happen
+						break;
+					}
+					rngMaps = mapsDist(rngRandoEnhancements);
+				}
+			}
+			
 		}
 		else if (strcmp(map, "t2_random") == 0)
 		{
-			while (!isNewMap)
+			if (!Cvar_VariableIntegerValue("cg_enableRandAllMissions"))
 			{
-				switch (rngMaps)
+				while (!isNewMap)
 				{
-				case 0:
-					map = "t2_rancor";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 1:
-					map = "t2_trip";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 2:
-					map = "t2_wedge";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 3:
-					map = "t2_rogue";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 4:
-					map = "t2_dpred";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				default:
-					// Shouldn't happen
-					break;
+					switch (rngMaps)
+					{
+					case 0:
+						map = "t2_rancor";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 1:
+						map = "t2_trip";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 2:
+						map = "t2_wedge";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 3:
+						map = "t2_rogue";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 4:
+						map = "t2_dpred";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					default:
+						// Shouldn't happen
+						break;
+					}
+					rngMaps = mapsDist(rngRandoEnhancements);
 				}
-				rngMaps = mapsDist(rngRandoEnhancements);
+			}
+			else // All missions can be loaded anytime !!!
+			{
+				while (!isNewMap)
+				{
+					switch (rngMaps)
+					{
+					case 0:
+						map = "t1_sour";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 1:
+						map = "t1_rail";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 2:
+						map = "t1_danger";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 3:
+						map = "t1_fatal";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 4:
+						map = "t1_surprise";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 5:
+						map = "t2_rancor";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 6:
+						map = "t2_trip";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 7:
+						map = "t2_wedge";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 8:
+						map = "t2_rogue";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 9:
+						map = "t2_dpred";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 10:
+						map = "t3_stamp";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 11:
+						map = "t3_bounty";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 12:
+						map = "t3_hevil";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 13:
+						map = "t3_byss";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 14:
+						map = "t3_rift";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					default:
+						// Shouldn't happen
+						break;
+					}
+					rngMaps = mapsDist(rngRandoEnhancements);
+				}
 			}
 		}
 		else if (strcmp(map, "t3_random") == 0)
 		{
-			while (!isNewMap)
+			if (!Cvar_VariableIntegerValue("cg_enableRandAllMissions"))
 			{
-				switch (rngMaps)
+				while (!isNewMap)
 				{
-				case 0:
-					map = "t3_stamp";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 1:
-					map = "t3_bounty";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 2:
-					map = "t3_hevil";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 3:
-					map = "t3_byss";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				case 4:
-					map = "t3_rift";
-					if (mapList.find(map) == std::string::npos) isNewMap = true;
-					break;
-				default:
-					// Shouldn't happen
-					break;
+					switch (rngMaps)
+					{
+					case 0:
+						map = "t3_stamp";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 1:
+						map = "t3_bounty";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 2:
+						map = "t3_hevil";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 3:
+						map = "t3_byss";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 4:
+						map = "t3_rift";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					default:
+						// Shouldn't happen
+						break;
+					}
+					rngMaps = mapsDist(rngRandoEnhancements);
 				}
-				rngMaps = mapsDist(rngRandoEnhancements);
+			}
+			else // All missions can be loaded anytime !!!
+			{
+				while (!isNewMap)
+				{
+					switch (rngMaps)
+					{
+					case 0:
+						map = "t1_sour";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 1:
+						map = "t1_rail";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 2:
+						map = "t1_danger";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 3:
+						map = "t1_fatal";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 4:
+						map = "t1_surprise";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 5:
+						map = "t2_rancor";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 6:
+						map = "t2_trip";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 7:
+						map = "t2_wedge";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 8:
+						map = "t2_rogue";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 9:
+						map = "t2_dpred";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 10:
+						map = "t3_stamp";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 11:
+						map = "t3_bounty";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 12:
+						map = "t3_hevil";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 13:
+						map = "t3_byss";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					case 14:
+						map = "t3_rift";
+						if (mapList.find(map) == std::string::npos) isNewMap = true;
+						break;
+					default:
+						// Shouldn't happen
+						break;
+					}
+					rngMaps = mapsDist(rngRandoEnhancements);
+				}
 			}
 		}
 		else
