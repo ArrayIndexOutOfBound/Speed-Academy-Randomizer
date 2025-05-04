@@ -12,5 +12,8 @@ class RandomizerUtils
 		static void RegenerateSeed();
 		static team_t GetClassTeamByClassname(char *npcType);
 		static team_t GetClassTeamByClass(class_t npcClass);
+		static int GetRandomValidWeapon();
+		static bool IsValidWeaponToRandomize(int weaponId);
+		static const int NUM_VALID_WEAPONS = 17;
 };
 

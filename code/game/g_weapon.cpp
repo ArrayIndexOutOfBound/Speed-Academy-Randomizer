@@ -30,6 +30,7 @@ extern cvar_t	*g_debugMelee;
 
 // Randomizer
 #include <random>
+#include "../randomizer/RandomizerUtils.h"
 extern vmCvar_t	cg_enableRandomizer;
 extern vmCvar_t	cg_enableRandomizerEnhancements;
 extern vmCvar_t	cg_enableRandWeaponProjectile;
@@ -5056,14 +5057,22 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 		RegisterItem(FindItemForWeapon(WP_DEMP2));
 		RegisterItem(FindItemForWeapon(WP_FLECHETTE));
 		RegisterItem(FindItemForWeapon(WP_ROCKET_LAUNCHER));
+		RegisterItem(FindItemForWeapon(WP_CONCUSSION));
+		RegisterItem(FindItemForWeapon(WP_ATST_MAIN));
+		RegisterItem(FindItemForWeapon(WP_ATST_SIDE));
+		RegisterItem(FindItemForWeapon(WP_BRYAR_PISTOL));
+		RegisterItem(FindItemForWeapon(WP_EMPLACED_GUN));
+		RegisterItem(FindItemForWeapon(WP_BOT_LASER));
+		RegisterItem(FindItemForWeapon(WP_TURRET));
+		RegisterItem(FindItemForWeapon(WP_TIE_FIGHTER));
+		RegisterItem(FindItemForWeapon(WP_RAPID_FIRE_CONC));
 
 		if (cg_enableRandWeaponProjectileMode.integer) // Chaos mode
 		{
 			// If the weapon we are using is like a blaster or something, I don't want to randomize mines and others
-			if (ent->s.weapon >= WP_BLASTER_PISTOL && ent->s.weapon <= WP_ROCKET_LAUNCHER)
+			if (RandomizerUtils::IsValidWeaponToRandomize(ent->s.weapon))
 			{
-				int rng = Weapon_Type_Dist(rngRandoEnhancements);
-				ent->s.weapon = rng;
+				ent->s.weapon = RandomizerUtils::GetRandomValidWeapon();
 			}
 		}
 		else
@@ -5074,20 +5083,18 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 			if (strcmp(lastCheckedMap, level.mapname)) // If different, will output 1 or -1, which are both valid for a if staement
 			{
 				// Reset our tabs, keep the first 10 places for Kyle
-				//randomNumbers.push_back(dist(rng));
 				strcpy(lastCheckedMap, level.mapname);
 				arrayKyleWP.clear();
 				arrayWeaponProjectiles.clear();
 				arrayNpcTracker.clear();
-				for (int i = 0; i < 16; i++) // 8 possible weapons between bryar and rocket, *2 because of altfire
+				for (int i = 0; i < RandomizerUtils::NUM_VALID_WEAPONS-1; i++) // 8 possible weapons between bryar and rocket, *2 because of altfire
 				{
-					rng = Weapon_Type_Dist(rngRandoEnhancements);
-					arrayKyleWP.push_back(rng);
+					arrayKyleWP.push_back(RandomizerUtils::GetRandomValidWeapon());
 				}
 
 			}
 			// 2. If the weapon we are using is like a blaster or something, I don't want to randomize mines and others
-			if (ent->s.weapon >= WP_BLASTER_PISTOL && ent->s.weapon <= WP_ROCKET_LAUNCHER)
+			if (RandomizerUtils::IsValidWeaponToRandomize(ent->s.weapon))
 			{
 				if (strcmp(ent->classname, "player") == 0)
 				{
@@ -5106,9 +5113,8 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 					}
 					if (!flagNpcExists) // NPC doesn't exist in my array, add the pointer to it and generate a new projectile for the guy
 					{
-						rng = Weapon_Type_Dist(rngRandoEnhancements);
 						arrayNpcTracker.push_back(ent);
-						arrayWeaponProjectiles.push_back(rng);
+						arrayWeaponProjectiles.push_back(RandomizerUtils::GetRandomValidWeapon());
 					}
 					// 3 Find the correct projectile the NPC can shoot
 					for (int i = 0; i < arrayNpcTracker.size(); i++)

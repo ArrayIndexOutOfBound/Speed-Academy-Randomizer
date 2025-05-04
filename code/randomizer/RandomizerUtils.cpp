@@ -29,6 +29,8 @@ extern game_import_t	gi;
 static std::map<string, team_t> teamsByName;
 static std::map<class_t, team_t> teamsByClass;
 
+static int validWeapons[RandomizerUtils::NUM_VALID_WEAPONS];
+
 static void AddCharArrayToInt(string seedString, int* value)
 {
 	for (int i = 0; i < seedString.size(); i++) {
@@ -256,6 +258,48 @@ team_t RandomizerUtils::GetClassTeamByClass(class_t npcClass)
 	}
 	team_t valFromMap = teamsByClass[npcClass];
 	return !valFromMap ? TEAM_FREE : valFromMap;
+}
+
+void initialiseWeaponsArray() {
+	validWeapons[0] = WP_BLASTER_PISTOL;
+	validWeapons[1] = WP_BLASTER;
+	validWeapons[2] = WP_DISRUPTOR;
+	validWeapons[3] = WP_BOWCASTER;
+	validWeapons[4] = WP_REPEATER;
+	validWeapons[5] = WP_DEMP2;
+	validWeapons[6] = WP_FLECHETTE;
+	validWeapons[7] = WP_ROCKET_LAUNCHER;
+	validWeapons[8] = WP_CONCUSSION;
+	validWeapons[9] = WP_ATST_MAIN;
+	validWeapons[10] = WP_ATST_SIDE;
+	validWeapons[11] = WP_BRYAR_PISTOL;
+	validWeapons[12] = WP_EMPLACED_GUN;
+	validWeapons[13] = WP_BOT_LASER;
+	validWeapons[14] = WP_TURRET;
+	validWeapons[15] = WP_TIE_FIGHTER;
+	validWeapons[16] = WP_RAPID_FIRE_CONC;
+}
+
+//Return a random valid weapon
+int RandomizerUtils::GetRandomValidWeapon() {
+	if (!validWeapons[0]) {
+		initialiseWeaponsArray();
+	}
+	uniform_int_distribution<int> weaponDist(0, NUM_VALID_WEAPONS-1);
+	return validWeapons[weaponDist(rngRandoEnhancements)];
+}
+
+bool RandomizerUtils::IsValidWeaponToRandomize(int weaponId) {
+	if (!validWeapons[0]) {
+		initialiseWeaponsArray();
+	}
+	
+	for (int i = 0; i < sizeof(validWeapons); i++) {
+		if (validWeapons[i] == weaponId) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void RandomizerInfoCommandCatcher(int page)
