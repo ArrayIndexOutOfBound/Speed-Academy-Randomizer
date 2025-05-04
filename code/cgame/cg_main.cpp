@@ -442,6 +442,7 @@ vmCvar_t	cg_enableRandNPCSpeed;
 vmCvar_t	cg_enableRandNpcHealth;
 vmCvar_t	cg_enableRandPlayerHealth;
 vmCvar_t	memorized_player_health;
+vmCvar_t	cg_enableRandAllMissions;
 
 typedef struct {
 	vmCvar_t	*vmCvar;
@@ -685,6 +686,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_enableRandNPCSpeed, "cg_enableRandNPCSpeed", "0", CVAR_ARCHIVE },
 	{ &cg_enableRandPlayerHealth, "cg_enableRandPlayerHealth", "0", CVAR_ARCHIVE },
 	{ &cg_enableRandNpcHealth, "cg_enableRandNpcHealth", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandAllMissions, "cg_enableRandAllMissions", "0", CVAR_ARCHIVE },
 	// Randomizer : information holder
 	{ &memorized_player_health, "memorized_player_health", "0", CVAR_ARCHIVE },
 };

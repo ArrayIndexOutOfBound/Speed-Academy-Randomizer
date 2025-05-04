@@ -5527,6 +5527,7 @@ void SP_NPC_Droid_Saber_Random(gentity_t* self)
 {
 	if (cg_enableRandomizer.integer)
 	{
+		// Fix me : in yavin2, you can softlock because the NPC going out of the room Rosh opens can die due to collision
 		CheckIfMapChanged();
 		SP_NPC_Spawn_Random(self);
 	}
