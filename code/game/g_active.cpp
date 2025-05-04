@@ -615,6 +615,23 @@ void P_WorldEffects( gentity_t *ent ) {
 		gi.WE_IsOutsideCausingPain(ent->currentOrigin) &&
 		TIMER_Done(ent, "AcidPainDebounce"))
 	{
+		// Randomizer : give the NPC replacing Kyle in vjun1 force protect, he will die without it
+		if (cg_enableRandomizer.integer)
+		{
+			if (strcmp(level.mapname, "vjun1") == 0)
+			{
+				// We do it once, no need to spam every frame
+				if (ent->targetname && (strcmp(ent->targetname, "kyle") == 0) && ent->client->ps.forcePowerLevel[FP_PROTECT] == 0)
+				{
+					ent->client->ps.forcePowersKnown |= (1 << FP_PROTECT);
+					ent->client->ps.forcePowerLevel[FP_PROTECT] = FORCE_LEVEL_3;
+					ent->client->ps.forcePowersKnown |= (1 << FP_HEAL);
+					ent->client->ps.forcePowerLevel[FP_HEAL] = FORCE_LEVEL_2;
+					ent->client->ps.forcePower = 100;
+				}
+			}
+		}
+
 		if (ent->NPC && ent->client && (ent->client->ps.forcePowersKnown&(1<< FP_PROTECT)))
 		{
 			if (!(ent->client->ps.forcePowersActive & (1<<FP_PROTECT)))

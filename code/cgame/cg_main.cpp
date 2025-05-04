@@ -424,6 +424,7 @@ vmCvar_t	cg_enableRandomizerEnhancements;
 vmCvar_t	cg_drawSeed;
 vmCvar_t	cg_useSetSeed;
 vmCvar_t	cg_setSeed;
+vmCvar_t	cg_randomizerDebug;
 // Better rng for randomizer : uniform distribution.
 #include <random>
 mt19937 rngRandoBase;
@@ -674,6 +675,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_drawSeed, "cg_drawSeed", "0", CVAR_ARCHIVE },
 	{ &cg_useSetSeed, "cg_useSetSeed", "0", CVAR_ARCHIVE },
 	{ &cg_setSeed, "cg_setSeed", "", CVAR_ARCHIVE },
+	{ &cg_randomizerDebug, "cg_randomizerDebug", "0", CVAR_ARCHIVE },
 	// Randomizer - evil mode
 	{ &cg_enableRandSaberColor, "cg_enableRandSaberColor", "0", CVAR_ARCHIVE },
 	{ &cg_enableRandSaberLength, "cg_enableRandSaberLength", "0", CVAR_ARCHIVE },
@@ -1493,8 +1495,8 @@ static void CG_RegisterEffects( void )
 
 		if (!theFxScheduler.RegisterEffect( (const char*)effectName ))
 		{
-			// Randomizer, skip some effects
-			if (cg_enableRandomizer.integer && (strcmp(effectName, "force/destruction_exp") == 0))
+			// Randomizer, skip some effects, that's ok
+			if (cg_enableRandomizer.integer)
 			{
 
 			}

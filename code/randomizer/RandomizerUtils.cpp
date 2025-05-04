@@ -158,10 +158,10 @@ void initialiseNameMap() {
 	teamsByName["NPC_Droid_Seeker"] =  TEAM_PLAYER;
 	teamsByName["NPC_Droid_Remote"] = TEAM_ENEMY;
 	teamsByName["NPC_Droid_Sentry"] = TEAM_ENEMY;
-	teamsByName["NPC_Droid_Gonk"] = TEAM_ENEMY;
-	teamsByName["NPC_Droid_Mouse"] = TEAM_ENEMY;
-	teamsByName["NPC_Droid_R2D2"] = TEAM_PLAYER;
-	teamsByName["NPC_Droid_R5D2"] = TEAM_PLAYER;
+	teamsByName["NPC_Droid_Gonk"] = TEAM_NEUTRAL;
+	teamsByName["NPC_Droid_Mouse"] = TEAM_NEUTRAL;
+	teamsByName["NPC_Droid_R2D2"] = TEAM_NEUTRAL;
+	teamsByName["NPC_Droid_R5D2"] = TEAM_NEUTRAL;
 	teamsByName["NPC_Droid_Protocol"] = TEAM_PLAYER;
 	teamsByName["NPC_Droid_Assassin"] = TEAM_ENEMY;
 	teamsByName["NPC_Droid_Saber"] = TEAM_ENEMY;

@@ -4491,10 +4491,14 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Spawn_Random(self);
 		break;
 	case 55:
-		SP_NPC_Monster_Rancor(self);
+		//SP_NPC_Monster_Rancor(self);
+		// No more
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 56:
-		SP_NPC_Monster_Mutant_Rancor(self);
+		//SP_NPC_Monster_Mutant_Rancor(self);
+		// No more
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 57:
 		SP_NPC_Monster_Wampa(self);
@@ -4816,6 +4820,18 @@ void SP_NPC_Kyle_Random(gentity_t* self)
 			}
 		}
 		*/
+		/*
+		if (strcmp(lastKnownMap, "vjun1") == 0) // Give the NPC that will replace Kyle Force protect or he will die by the rain
+		{
+			// behaviorSet	0x7ac7d2e8 {0x14cd3e7c "vjun1/kyle_follows", 0x00000000 <NULL>, 0x00000000 <NULL>, 0x00000000 <NULL>, ...}	char *[17]
+			//SP_NPC_Spawn_Random_Humanoid(self);
+			// Client does not exist yet, can't allocate force power here
+			//self->client->ps.forcePowersKnown |= (1 << FP_PROTECT);
+			//self->client->ps.forcePowerLevel[FP_PROTECT] = FORCE_LEVEL_3;
+			//self->client->ps.forcePower = 100;
+			return;
+		}
+		*/
 		SP_NPC_Spawn_Random_Humanoid(self);
 	}
 	else SP_NPC_Kyle(self);
@@ -4861,8 +4877,8 @@ void SP_NPC_Rosh_Penin_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		//SP_NPC_Spawn_Random_Humanoid(self);
-		SP_NPC_Rosh_Penin(self);
+		SP_NPC_Spawn_Random_Humanoid(self);
+		//SP_NPC_Rosh_Penin(self);
 	}
 	else SP_NPC_Rosh_Penin(self);
 }
@@ -4934,7 +4950,8 @@ void SP_NPC_BobaFett_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+		//SP_NPC_Spawn_Random(self);
+		SP_NPC_BobaFett(self);
 	}
 	else SP_NPC_BobaFett(self);
 }
@@ -4949,6 +4966,8 @@ void SP_NPC_Ragnos_Random(gentity_t* self)
 }
 void SP_NPC_Lannik_Racto_Random(gentity_t* self)
 {
+	// Fix me : in t2_rogue, the droids have a strange AI in seed 3804079049.
+	// One of them despawn instead of dying, making a softlock
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
@@ -5312,7 +5331,9 @@ void SP_NPC_Monster_Rancor_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+		//SP_NPC_Spawn_Random(self);
+		// disabled rancors for the rando, but keep the normal ones
+		SP_NPC_Monster_Rancor(self);
 	}
 	else SP_NPC_Monster_Rancor(self);
 }
@@ -5321,7 +5342,9 @@ void SP_NPC_Monster_Mutant_Rancor_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+		//SP_NPC_Spawn_Random(self);
+		// disabled rancors for the rando, but keep the normal ones
+		SP_NPC_Monster_Mutant_Rancor(self);
 	}
 	else SP_NPC_Monster_Mutant_Rancor(self);
 }
@@ -5501,7 +5524,10 @@ void SP_NPC_Droid_R5D2_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+
+		if (strcmp(lastKnownMap,"t1_surprise") == 0) SP_NPC_Droid_R5D2(self);
+		else SP_NPC_Spawn_Random(self);
+
 	}
 	else SP_NPC_Droid_R5D2(self);
 }

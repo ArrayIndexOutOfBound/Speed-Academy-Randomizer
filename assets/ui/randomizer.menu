@@ -25,13 +25,13 @@
 		{
 			show				randomizer_background ;
 			show 				basic ;
-			hide 				enhancements1 ;
-			hide 				enhancements2 ;
+			//hide 				enhancements1 ;
+			//hide 				enhancements2 ;
 			hide 				assists ;
 			setfocus			basic;
 			setitemcolor		basicmenubutton forecolor 1 1 1 1;
-			setitemcolor		enhancements1menubutton forecolor 1 .682 0 1;
-			setitemcolor		enhancements2menubutton forecolor 1 .682 0 1;
+			//setitemcolor		enhancements1menubutton forecolor 1 .682 0 1;
+			//setitemcolor		enhancements2menubutton forecolor 1 .682 0 1;
 			setitemcolor		assistsmenubutton forecolor 1 .682 0 1;
 		}
 			

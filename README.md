@@ -44,6 +44,17 @@ Default: `0`.
 Draw the seed used during a run. Will draw "No Rand" is `cg_enableRandomizer` is 0.
 Default: `0`.
 
+## About Force Holocrons
+Holocron items, like the one you can find on the map yavin_trial in Jedi Outcast, are available as collectible items.
+Here are how they work :
+- When an holocron is rolled during the randomized process, they only have a 20% to 'stay'. If you hit the 80% remaining, the item will be rerolled.
+- They have a slightly higher hitbox, so they may be picked from a bit father than what their 3D model indicate.
+- When picked up, if you didn't had the force power, you will unlock it.
+- When picked up, if you already had a specific force power at level 1 , it will have a 1/2² or 25% to increment by 1.
+- When picked up, if you already had a specific force power at level 2 , it will have a 1/3² or 11% to increment by 1.
+- When pickup up, if you already had a specific force power at level 3 , nothing will happen.
+- The Force powers will be visible during the menu between missions, as a reminder as what you collected.
+- If you get a level 3 core Force power while in the first tier of mission (ex : Force jump 3), it will remain as is until you reach the second tier. Reaching the second tier will reset all core Force power to level 2.
 
 ## List of addition for the base Randomizer
 

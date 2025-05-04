@@ -11,7 +11,9 @@
 // Randomizer addition
 #include <random>
 extern mt19937 rngRandoBase;
+extern mt19937 rngRandoEnhancements;
 extern vmCvar_t cg_enableRandomizer;
+extern vmCvar_t cg_randomizerDebug;
 
 extern qboolean	missionInfo_Updated;
 
@@ -603,6 +605,61 @@ int Pickup_Holocron( gentity_t *ent, gentity_t *other )
 {
 	int forcePower = ent->item->giTag;
 	int forceLevel = ent->count;
+
+	// Randomizer addition : increment force power if conditions are met
+	if (cg_enableRandomizer.integer) {
+		uniform_int_distribution<int> holocronDist(0, 100);
+		int rng = holocronDist(rngRandoEnhancements);
+		float rngToBeat = 0.0;
+		switch (other->client->ps.forcePowerLevel[forcePower])
+		{
+		case FORCE_LEVEL_0: // If you don't have the FP : unlock it
+			if (cg_randomizerDebug.integer) gi.Printf(S_COLOR_CYAN"RandomizerDebug | Pickup_Holocron : setting FP to 1\n");
+			forceLevel = 1;
+			break;
+		case FORCE_LEVEL_1: // If you have the FP at lvl 1 : 1/2² to unlock it
+			rngToBeat = ((1.0 / (2.0 * 2.0)) * 100.0);
+			if (rng <= rngToBeat)
+			{
+				if (cg_randomizerDebug.integer)
+				{
+					gi.Printf(S_COLOR_CYAN"RandomizerDebug | Pickup_Holocron : SUCCEDED rng roll. RNG to beat = %f, RNG rolled = %i\n", rngToBeat, rng);
+					gi.Printf(S_COLOR_CYAN"RandomizerDebug | Pickup_Holocron : setting FP to 2\n");
+				}
+				forceLevel = 2;
+			}
+			else
+			{
+				if (cg_randomizerDebug.integer) gi.Printf(S_COLOR_CYAN"RandomizerDebug | Pickup_Holocron : FAILED rng roll. RNG to beat = %f, RNG rolled = %i\n", rngToBeat, rng);
+			}
+			break;
+		case FORCE_LEVEL_2: // If you have the FP at lvl 2 : 1/3² to unlock it
+			rngToBeat = ((1.0 / (3.0 * 3.0)) * 100.0);
+			if (rng <= rngToBeat)
+			{
+				if (cg_randomizerDebug.integer)
+				{
+					gi.Printf(S_COLOR_CYAN"RandomizerDebug | Pickup_Holocron : SUCCEDED rng roll. RNG to beat = %f, RNG rolled = %i\n", rngToBeat, rng);
+					gi.Printf(S_COLOR_CYAN"RandomizerDebug | Pickup_Holocron : setting FP to 3\n");
+				}
+				forceLevel = 3;
+			}
+			else
+			{
+				if (cg_randomizerDebug.integer) gi.Printf(S_COLOR_CYAN"RandomizerDebug | Pickup_Holocron : FAILED rng roll. RNG to beat = %f, RNG rolled = %i\n", rngToBeat, rng);
+			}
+			break;
+		case FORCE_LEVEL_3: // Nothing to do, unless FP 4 and 5 exists :eyes:
+			break;
+		case FORCE_LEVEL_4: // Impossible
+			break;
+		case FORCE_LEVEL_5: // Impossible
+			break;
+		default: // Impossible
+			break;
+		}
+	}
+
 	// check if out of range
 	if( forceLevel < 0 || forceLevel >= NUM_FORCE_POWER_LEVELS )
 	{

@@ -1,0 +1,8 @@
+In t2_rogue, the droids have a strange AI in seed 3804079049.
+One of them despawn instead of dying, making a softlock
+
+In t2_trip, none of the NPC gets on bikes.
+Bikes do not spawn under NPCs, so they don't get inside.
+
+vjun1 : Tie bomber makes the game crash
+kor2 doesn't load
