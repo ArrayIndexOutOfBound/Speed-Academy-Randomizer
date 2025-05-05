@@ -5555,7 +5555,14 @@ void SP_NPC_Droid_Saber_Random(gentity_t* self)
 	{
 		// Fix me : in yavin2, you can softlock because the NPC going out of the room Rosh opens can die due to collision
 		CheckIfMapChanged();
-		SP_NPC_Spawn_Random(self);
+		if (strcmp(lastKnownMap, "yavin2") == 0)
+		{
+			SP_NPC_Droid_Saber(self); // Ok wtf. Even when spawning as the droid, it dies in a rando environment an not when in a normal game ?????
+		}
+		else
+		{
+			SP_NPC_Spawn_Random(self);
+		}
 	}
 	else SP_NPC_Droid_Saber(self);
 }
