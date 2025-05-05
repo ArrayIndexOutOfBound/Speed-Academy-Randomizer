@@ -30,9 +30,9 @@
 			hide 				assists ;
 			setfocus			basic;
 			setitemcolor		basicmenubutton forecolor 1 1 1 1;
-			//setitemcolor		enhancements1menubutton forecolor 0.65 0.65 1 1;
-			//setitemcolor		enhancements2menubutton forecolor 0.65 0.65 1 1;
-			setitemcolor		assistsmenubutton forecolor 0.65 0.65 1 1;
+			//setitemcolor		enhancements1menubutton forecolor 1 .682 0 1;
+			//setitemcolor		enhancements2menubutton forecolor 1 .682 0 1;
+			setitemcolor		assistsmenubutton forecolor 1 .682 0 1;
 		}
 			
 		onESC 
@@ -196,7 +196,7 @@
 		// RETURN button in lower left corner
 		itemDef 
 		{
-			name				ingamereturnbutton_glow
+			name				returnbutton_glow
 			group				highlights
 			style				WINDOW_STYLE_SHADER
 			rect				115 444 130 24 
@@ -209,7 +209,7 @@
 
 		itemDef 
 		{
-			name				ingamereturnbutton
+			name				returnbutton
 			group				othermain
 			text				RETURN
 			descText			RETURN
@@ -227,11 +227,11 @@
 
 			mouseEnter 
 			{ 
-				show			ingamereturnbutton_glow 
+				show			returnbutton_glow 
 			}
 			mouseExit 
 			{ 
-				hide			ingamereturnbutton_glow 
+				hide			returnbutton_glow 
 			}	  	  
 			action 
 			{ 
@@ -318,12 +318,14 @@
 				hide 			enhancements_force ;
 				hide 			enhancements_evil ;
 				hide 			assists ;
+				hide 			infos ;
 				setfocus		basic ;
 				setitemcolor	basicmenubutton forecolor 1 1 1 1;
 				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
 				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
+				setitemcolor	infos_menubutton forecolor 1 .682 0 1;
 			}
 		}
 
@@ -377,12 +379,14 @@
 				hide 			enhancements_force ;
 				hide 			enhancements_evil ;
 				hide 			assists ;
+				hide 			infos ;
 				setfocus		enhancements_cosmetics ;
 				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 1 1 1;
 				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
 				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
+				setitemcolor	infos_menubutton forecolor 1 .682 0 1;
 			}
 		}
 
@@ -436,12 +440,14 @@
 				show 			enhancements_force ;
 				hide 			enhancements_evil ;
 				hide 			assists ;
+				hide 			infos ;
 				setfocus		enhancements_force ;
 				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_force_menubutton forecolor 1 1 1 1;
 				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
 				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
+				setitemcolor	infos_menubutton forecolor 1 .682 0 1;
 			}
 		}
 		
@@ -496,12 +502,14 @@
 				hide 			enhancements_force ;
 				show 			enhancements_evil ;
 				hide 			assists ;
+				hide 			infos ;
 				setfocus		enhancements_evil ;
 				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_evil_menubutton forecolor 1 1 1 1;
 				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
+				setitemcolor	infos_menubutton forecolor 1 .682 0 1;
 			}
 		}
 
@@ -555,12 +563,75 @@
 				hide 			enhancements_force ;
 				hide 			enhancements_evil ;
 				show 			assists ;
+				hide 			infos ;
 				setfocus		assists ;
 				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
 				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
 				setitemcolor	assists_menubutton forecolor 1 1 1 1;
+				setitemcolor	infos_menubutton forecolor 1 .682 0 1;
+			}
+		}
+		
+		// Infos button
+		itemDef 
+		{
+			name				infos_glow
+			group				highlights
+			style				WINDOW_STYLE_SHADER
+			rect				80 363 170 30
+			background			"gfx/menus/menu_blendbox2"			// Frame around button
+			forecolor			1 1 1 1
+			visible			0
+			// appearance_slot		1
+			decoration
+		}
+		
+		itemDef 
+		{
+			name				infos_menubutton
+			group				none
+			text				"Infos"
+			type				ITEM_TYPE_BUTTON
+			style				WINDOW_STYLE_EMPTY
+			rect				80 363 170 30
+			font				3
+			textscale			0.9
+			textalignx			170
+			textaligny			5
+			textstyle			3
+			textalign			ITEM_ALIGN_RIGHT
+			forecolor			1 .682 0 1
+			visible			1
+			descText			"Randomizer - Infos"
+
+			mouseEnter 
+			{ 
+				show			infos_glow
+			}
+			mouseExit 
+			{ 
+				hide			infos_glow
+			}	  	  
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+
+				show			randomizer_background ;
+				hide 			basic ;
+				hide 			enhancements_cosmetics ;
+				hide 			enhancements_force ;
+				hide 			enhancements_evil ;
+				hide 			assists ;
+				show 			infos ;
+				setfocus		infos ;
+				setitemcolor	basicmenubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_cosmetics_menubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_force_menubutton forecolor 1 .682 0 1;
+				setitemcolor	enhancements_evil_menubutton forecolor 1 .682 0 1;
+				setitemcolor	assists_menubutton forecolor 1 .682 0 1;
+				setitemcolor	infos_menubutton forecolor 1 1 1 1;
 			}
 		}
 
@@ -1401,7 +1472,7 @@
 			name				enable_safeStart
 			group				assists
       		type				ITEM_TYPE_MULTI
-			text				"Enable Safe Start:"
+			text				"Maybe add some assists for Academy"
 			cvar				"cg_enableSafeStart"
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
 			rect				305 231 300 20
@@ -1412,7 +1483,7 @@
 			textscale 			0.8
 			forecolor			1 1 1 1
 			visible			0
-			descText			"Prevents first two enemies from attacking unprovoked"
+			descText			"Maybe add some assists for Academy"
 			action
 			{
 				play			"sound/interface/button1.wav"
@@ -1426,99 +1497,133 @@
 				hide			highlight4
 			} 
 		}
-
+		
+		//----------------------------------------------------------------------------------------------
+		//
+		//	INFOS FIELDS
+		//
+		//----------------------------------------------------------------------------------------------
+		
 		itemDef 
-		{	
-			name				startWithPush
-			group				assists
-      		type				ITEM_TYPE_MULTI
-			text				"Start With Force Push"
-			cvar				"cg_startWithPush"
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			rect				305 251 300 20
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
+		{
+			name				randomizer_info1
+			group				infos
+			text				"Base randomizer have the following :"
+			font				2
+			textscale			0.8
+			rect				280 191 300 20
+			textalign			ITEM_ALIGN_CENTER
+			textalignx			150 
 			textaligny			-2
-			font 				2
-			textscale 			0.8
-			forecolor			1 1 1 1
+			forecolor			0.7 0.7 0.7 1
 			visible			0
-			descText			"Start with force push 1"
-			action
-			{
-				play			"sound/interface/button1.wav"
-			}
-			mouseenter 
-			{ 
-				show			highlight5
-			}
-			mouseexit 
-			{ 
-				hide			highlight5
-			} 
-		}
-
-		itemDef 
-		{	
-			name				bonusJanHealth
-			group				assists
-      		type				ITEM_TYPE_MULTI
-			text				"Bonus Jan Health:"
-			cvar				"cg_bonusJanHealth"
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			rect				305 271 300 20
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			-2
-			font 				2
-			textscale 			0.8
-			forecolor			1 1 1 1
-			visible			0
-			descText			"Starts Jan with +50 bonus health on kejim_post"
-			action
-			{
-				play			"sound/interface/button1.wav"
-			}
-			mouseenter 
-			{ 
-				show			highlight6
-			}
-			mouseexit 
-			{ 
-				hide			highlight6
-			} 
+			// appearance_slot		11
+			decoration
 		}
 		
 		itemDef 
-		{	
-			name				random_kyle_health
-			group				assists
-      		type				ITEM_TYPE_MULTI
-			text				"Random Kyle/Player health :"
-			cvar				"cg_enableRandKyleHealth"
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			rect				305 291 300 20
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
+		{
+			name				randomizer_info2
+			group				infos
+			text				"RNG on items, NPC types."
+			font				2
+			textscale			0.8
+			rect				280 211 300 20
+			textalign			ITEM_ALIGN_CENTER
+			textalignx			150 
 			textaligny			-2
-			font 				2
-			textscale 			0.8
-			forecolor			1 1 1 1
+			forecolor			0.7 0.7 0.7 1
 			visible			0
-			descText			"Between 33% and 300%."
-			action
-			{
-				play			"sound/interface/button1.wav"
-			}
-			mouseenter 
-			{ 
-				show			highlight7
-			}
-			mouseexit 
-			{ 
-				hide			highlight7
-			} 
+			// appearance_slot		11
+			decoration
 		}
+		
+		itemDef 
+		{
+			name				randomizer_info3
+			group				infos
+			text				"-"
+			font				2
+			textscale			0.8
+			rect				280 231 300 20
+			textalign			ITEM_ALIGN_CENTER
+			textalignx			150 
+			textaligny			-2
+			forecolor			0.7 0.7 0.7 1
+			visible			0
+			// appearance_slot		11
+			decoration
+		}
+		
+		itemDef 
+		{
+			name				randomizer_info4
+			group				infos
+			text				"Check the GitHub pages for informations about:"
+			font				2
+			textscale			0.8
+			rect				280 251 300 20
+			textalign			ITEM_ALIGN_CENTER
+			textalignx			150 
+			textaligny			-2
+			forecolor			0.7 0.7 0.7 1
+			visible			0
+			// appearance_slot		11
+			decoration
+		}
+		
+		itemDef 
+		{
+			name				randomizer_info5
+			group				infos
+			text				"- Disabled NPCs from the RNG pool."
+			font				2
+			textscale			0.8
+			rect				280 271 300 20
+			textalign			ITEM_ALIGN_CENTER
+			textalignx			150 
+			textaligny			-2
+			forecolor			0.7 0.7 0.7 1
+			visible			0
+			// appearance_slot		11
+			decoration
+		}
+		
+		itemDef 
+		{
+			name				randomizer_info6
+			group				infos
+			text				"- Fixed NPCs (eg : rancors)"
+			font				2
+			textscale			0.8
+			rect				280 291 300 20
+			textalign			ITEM_ALIGN_CENTER
+			textalignx			150 
+			textaligny			-2
+			forecolor			0.7 0.7 0.7 1
+			visible			0
+			// appearance_slot		11
+			decoration
+		}
+		
+		itemDef 
+		{
+			name				randomizer_info7
+			group				infos
+			text				"- How holocrons works."
+			font				2
+			textscale			0.8
+			rect				280 311 300 20
+			textalign			ITEM_ALIGN_CENTER
+			textalignx			150 
+			textaligny			-2
+			forecolor			0.7 0.7 0.7 1
+			visible			0
+			// appearance_slot		11
+			decoration
+		}
+		
+		
 	}
 	}
 }
