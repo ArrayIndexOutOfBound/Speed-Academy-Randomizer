@@ -304,7 +304,8 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 		//G_CreateG2AttachedWeaponModel(ent, ent->client->ps.saber->model, 1, 1);
 		WP_InitForcePowers(ent);
 		Jedi_ClearTimers(ent);
-		if (ent->spawnflags & JSF_AMBUSH)
+		if (ent->spawnflags & JSF_AMBUSH &&
+			(!Q_stricmp("yavin2", "level.mapname") && !Q_stricmp(ent->targetname, "npc_saberDroid"))) //Do not apply ambush logic to saber droid
 		{//ambusher
 			ent->NPC->scriptFlags |= SCF_IGNORE_ALERTS;
 			ent->client->noclip = qtrue;//hang
@@ -5555,14 +5556,7 @@ void SP_NPC_Droid_Saber_Random(gentity_t* self)
 	{
 		// Fix me : in yavin2, you can softlock because the NPC going out of the room Rosh opens can die due to collision
 		CheckIfMapChanged();
-		if (strcmp(lastKnownMap, "yavin2") == 0)
-		{
-			SP_NPC_Droid_Saber(self); // Ok wtf. Even when spawning as the droid, it dies in a rando environment an not when in a normal game ?????
-		}
-		else
-		{
-			SP_NPC_Spawn_Random(self);
-		}
+		SP_NPC_Spawn_Random(self);
 	}
 	else SP_NPC_Droid_Saber(self);
 }
