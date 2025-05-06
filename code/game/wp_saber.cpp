@@ -980,7 +980,12 @@ int WP_SaberInitBladeData( gentity_t *ent )
 						else // That's Player, when drawing the saber might as well use the current time for the saber lenght
 						{
 							// Note : when using 2 sabers "either two single blade or one double), the length of only the first one is used.
-							if (cg_enableRandSaberLength.integer) ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = level.framenum % 151 + 10; // Range of 25% to 400% of initial value
+							if (cg_enableRandSaberLength.integer)
+							{
+								uniform_int_distribution<int> lengthDist(1, 150);
+								int rng = lengthDist(rngRandoEnhancements);
+								ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = rng + 10; // Range of 25% to 400% of initial value
+							}
 							if (cg_enableRandSaberColor.integer)
 							{
 								uniform_int_distribution<int> colorDist(0, 5);
