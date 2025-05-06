@@ -1491,6 +1491,37 @@
 			} 
 		}
 
+		itemDef 
+		{	
+			name				random_movement_restrictions
+			group				enhancements_evil
+      		type				ITEM_TYPE_MULTI
+			text				"Random Movement Restrictions :"
+			cvar				"cg_enableRandMovementRestrictions"
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			rect				305 311 300 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			-2
+			font 				2
+			textscale 			0.8
+			forecolor			1 1 1 1
+			visible			0
+			descText			"Random Movement Restrictions per level e.g. VRGI, SG"
+			action
+			{
+				play			"sound/interface/button1.wav"
+			}
+			mouseenter 
+			{ 
+				show			highlight8
+			}
+			mouseexit 
+			{ 
+				hide			highlight8
+			} 
+		}
+
 
 		//----------------------------------------------------------------------------------------------
 		//
