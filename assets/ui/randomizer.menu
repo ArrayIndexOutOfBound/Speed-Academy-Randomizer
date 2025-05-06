@@ -1075,6 +1075,68 @@
 			} 
 		}
 
+		itemDef 
+		{	
+			name				random_jump_sounds
+			group				enhancements_cosmetics
+      		type				ITEM_TYPE_MULTI
+			text				"Random Jump Sound:"
+			cvar				"cg_enableRandJumpSound"
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			rect				305 271 300 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			-2
+			font 				2
+			textscale 			0.8
+			forecolor			1 1 1 1
+			visible			0
+			descText			"Play a random sound on jump"
+			action
+			{
+				play			"sound/interface/button1.wav"
+			}
+			mouseenter 
+			{ 
+				show			highlight6
+			}
+			mouseexit 
+			{ 
+				hide			highlight6
+			} 
+		}
+
+		itemDef 
+		{	
+			name				random_all_sounds
+			group				enhancements_cosmetics
+      		type				ITEM_TYPE_MULTI
+			text				"Randomize All Sounds:"
+			cvar				"cg_enableRandSounds"
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			rect				305 291 300 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			-2
+			font 				2
+			textscale 			0.8
+			forecolor			1 1 1 1
+			visible			0
+			descText			"Randomize all sounds played"
+			action
+			{
+				play			"sound/interface/button1.wav"
+			}
+			mouseenter 
+			{ 
+				show			highlight7
+			}
+			mouseexit 
+			{ 
+				hide			highlight7
+			} 
+		}
+
 		//----------------------------------------------------------------------------------------------
 		//
 		//	ENHANCEMENTS FIELDS GROUP 2
