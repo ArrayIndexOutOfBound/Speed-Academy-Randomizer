@@ -250,6 +250,187 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	{//if a cinematic guy, default us to wait bState
 		ent->NPC->behaviorState = BS_CINEMATIC;
 	}
+
+	// ---------- Stuff for new NPCs ----------
+	if (ent->client->NPC_class == CLASS_RANCOR)
+	{
+		if (Q_stricmp("mutant_rancor", ent->NPC_type) == 0)
+		{
+			ent->spawnflags |= 1;//just so I know it's a mutant rancor as opposed to a normal one
+			ent->NPC->aiFlags |= NPCAI_NAV_THROUGH_BREAKABLES;
+			ent->mass = 2000;
+		}
+		else
+		{
+			ent->NPC->aiFlags |= NPCAI_NAV_THROUGH_BREAKABLES;
+			ent->mass = 1000;
+		}
+		ent->flags |= FL_NO_KNOCKBACK;
+	}
+	else if (ent->client->NPC_class == CLASS_SAND_CREATURE)
+	{//???
+		ent->clipmask = CONTENTS_SOLID | CONTENTS_MONSTERCLIP;//it can go through others
+		ent->contents = 0;//can't be hit?
+		ent->takedamage = qfalse;//can't be killed
+		ent->flags |= FL_NO_KNOCKBACK;
+		SandCreature_ClearTimers(ent);
+	}
+	else if (ent->client->NPC_class == CLASS_BOBAFETT)
+	{//set some stuff, precache
+		ent->client->ps.forcePowersKnown |= (1 << FP_LEVITATION);
+		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
+		ent->client->ps.forcePower = 100;
+		ent->NPC->scriptFlags |= (SCF_NAV_CAN_FLY | SCF_FLY_WITH_JET | SCF_NAV_CAN_JUMP);
+		NPC->flags |= FL_UNDYING;		// Can't Kill Boba
+	}
+	else if (ent->client->NPC_class == CLASS_ROCKETTROOPER)
+	{//set some stuff, precache
+		ent->client->ps.forcePowersKnown |= (1 << FP_LEVITATION);
+		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
+		ent->client->ps.forcePower = 100;
+		ent->NPC->scriptFlags |= (SCF_NAV_CAN_FLY | SCF_FLY_WITH_JET | SCF_NAV_CAN_JUMP);//no groups, no combat points!
+		if (Q_stricmp("rockettrooper2Officer", ent->NPC_type) == 0)
+		{//start in the air, use spotlight
+			//ent->NPC->scriptFlags |= SCF_NO_GROUPS;
+			ent->NPC->scriptFlags &= ~SCF_FLY_WITH_JET;
+			RT_FlyStart(ent);
+			NPC_SetMoveGoal(ent, ent->currentOrigin, 16, qfalse, -1, NULL);
+			VectorCopy(ent->currentOrigin, ent->pos1);
+		}
+		if ((ent->spawnflags & 2))
+		{//spotlight
+			ent->client->ps.eFlags |= EF_SPOTLIGHT;
+		}
+	}
+	else if (ent->client->NPC_class == CLASS_SABER_DROID)
+	{
+		ent->flags |= FL_NO_KNOCKBACK;
+	}
+	else if (ent->client->NPC_class == CLASS_SABOTEUR)
+	{//can cloak
+		ent->NPC->aiFlags |= NPCAI_SHIELDS;//give them the ability to cloak
+		if ((ent->spawnflags & 16))
+		{//start cloaked
+			Saboteur_Cloak(ent);
+		}
+	}
+	else if (ent->client->NPC_class == CLASS_ASSASSIN_DROID)
+	{
+		ent->client->ps.stats[STAT_ARMOR] = 250;	// start with full armor
+		if (ent->s.weapon == WP_BLASTER)
+		{
+			ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+		}
+		ent->flags |= (FL_NO_KNOCKBACK);
+	}
+	if (ent->spawnflags & 4096)
+	{
+		ent->NPC->scriptFlags |= SCF_NO_GROUPS;//don't use combat points or group AI
+	}
+
+	if (Q_stricmp("DKothos", ent->NPC_type) == 0
+		|| Q_stricmp("VKothos", ent->NPC_type) == 0)
+	{
+		ent->NPC->scriptFlags |= SCF_DONT_FIRE;
+		ent->NPC->aiFlags |= NPCAI_HEAL_ROSH;
+		ent->count = 100;
+	}
+	else if (Q_stricmp("rosh_dark", ent->NPC_type) == 0)
+	{
+		ent->NPC->aiFlags |= NPCAI_ROSH;
+	}
+
+	if (Q_stricmpn(ent->NPC_type, "hazardtrooper", 13) == 0)
+	{//hazard trooper
+		ent->NPC->scriptFlags |= SCF_NO_GROUPS;//don't use combat points or group AI
+		ent->flags |= (FL_SHIELDED | FL_NO_KNOCKBACK);//low-level shots bounce off, no knockback
+	}
+	if (!Q_stricmp("Yoda", ent->NPC_type))
+	{//FIXME: extern this into NPC.cfg?
+		ent->NPC->scriptFlags |= SCF_NO_FORCE;//force powers don't work on him
+		ent->NPC->aiFlags |= NPCAI_BOSS_CHARACTER;
+	}
+	if (!Q_stricmp("emperor", ent->NPC_type)
+		|| !Q_stricmp("cultist_grip", ent->NPC_type)
+		|| !Q_stricmp("cultist_drain", ent->NPC_type)
+		|| !Q_stricmp("cultist_lightning", ent->NPC_type))
+	{//FIXME: extern this into NPC.cfg?
+		ent->NPC->scriptFlags |= SCF_DONT_FIRE;//so he uses only force powers
+	}
+	if (!Q_stricmp("Rax", ent->NPC_type))
+	{
+		ent->NPC->scriptFlags |= SCF_DONT_FLEE;
+	}
+	if (!Q_stricmp("cultist_destroyer", ent->NPC_type))
+	{
+		ent->splashDamage = 1000;
+		ent->splashRadius = 384;
+		//FIXME: precache these!
+		ent->fxID = G_EffectIndex("force/destruction_exp");
+		ent->NPC->scriptFlags |= (SCF_DONT_FLEE | SCF_IGNORE_ALERTS);
+		ent->NPC->ignorePain = qtrue;
+	}
+	if (Q_stricmp("chewie", ent->NPC_type))
+	{
+		//in case chewie ever loses his gun...
+		ent->NPC->aiFlags |= NPCAI_HEAVY_MELEE;
+	}
+	//==================
+	if (ent->client->ps.saber[0].type != SABER_NONE
+		&& (!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))
+	{//if I'm equipped with a saber, initialize it (them)
+		ent->client->ps.SaberDeactivate();
+		ent->client->ps.SetSaberLength(0);
+		WP_SaberInitBladeData(ent);
+		if (ent->client->ps.weapon == WP_SABER)
+		{//this is our current weapon, add the models now
+			WP_SaberAddG2SaberModels(ent);
+		}
+		Jedi_ClearTimers(ent);
+	}
+	if (ent->client->ps.forcePowersKnown != 0)
+	{
+		WP_InitForcePowers(ent);
+		if (ent->client->ps.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_0)
+		{
+			ent->NPC->scriptFlags |= SCF_NAV_CAN_JUMP;	// anyone who has any force jump can jump
+		}
+	}
+	if (ent->client->NPC_class == CLASS_HOWLER)
+	{
+		Howler_ClearTimers(ent);
+		ent->NPC->scriptFlags |= SCF_NO_FALLTODEATH;
+		ent->flags |= FL_NO_IMPACT_DMG;
+		ent->NPC->scriptFlags |= SCF_NAV_CAN_JUMP;	// These jokers can jump
+	}
+	if (ent->client->NPC_class == CLASS_DESANN
+		|| ent->client->NPC_class == CLASS_TAVION
+		|| ent->client->NPC_class == CLASS_LUKE
+		|| ent->client->NPC_class == CLASS_KYLE
+		|| Q_stricmp("tavion_scepter", ent->NPC_type) == 0
+		|| Q_stricmp("alora_dual", ent->NPC_type) == 0)
+	{
+		ent->NPC->aiFlags |= NPCAI_BOSS_CHARACTER;
+	}
+	else if (Q_stricmp("alora", ent->NPC_type) == 0
+		|| Q_stricmp("rosh_dark", ent->NPC_type) == 0)
+	{
+		ent->NPC->aiFlags |= NPCAI_SUBBOSS_CHARACTER;
+	}
+	if (ent->client->NPC_class == CLASS_TUSKEN)
+	{
+		if (g_spskill->integer > 1)
+		{//on hard, tusken raiders are faster than you
+			ent->NPC->stats.runSpeed = 280;
+			ent->NPC->stats.walkSpeed = 65;
+		}
+	}
+	// ---------- Stuff for new NPCs ----------
+
+
+
+
+
 	switch (ent->client->playerTeam) {
 	case TEAM_PLAYER:
 		ent->client->enemyTeam = TEAM_ENEMY;
@@ -268,6 +449,7 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 
 	//***I'm not sure whether I should leave this as a TEAM_ switch, I think NPC_class may be more appropriate - dmv
 	//Amber - whoever dmv is they're right, this should be based on class
+	// Posto : sup'
 	switch (ent->client->NPC_class) {
 	case CLASS_SEEKER:
 		ent->NPC->defaultBehavior = BS_DEFAULT;
@@ -275,6 +457,12 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 		ent->svFlags |= SVF_CUSTOM_GRAVITY;
 		//ent->NPC->stats.moveType = MT_FLYSWIM;
 		ent->NPC->stats.move = MT_FLYSWIM;
+		ent->count = 30; // SEEKER shot ammo count
+
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		ent->client->moveType = MT_FLYSWIM;
 		ent->count = 30; // SEEKER shot ammo count
 		return;
 	case CLASS_PROBE:
@@ -442,6 +630,51 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 			ent->flags |= (FL_SHIELDED | FL_NO_KNOCKBACK);
 		}
 	}
+
+	// ---------- Stuff existing in Academy ----------
+	// Set CAN FLY Flag for Navigation On The Following Classes
+	//----------------------------------------------------------
+	if (ent->client->NPC_class == CLASS_PROBE ||
+		ent->client->NPC_class == CLASS_REMOTE ||
+		ent->client->NPC_class == CLASS_SEEKER ||
+		ent->client->NPC_class == CLASS_SENTRY ||
+		ent->client->NPC_class == CLASS_GLIDER ||
+		ent->client->NPC_class == CLASS_IMPWORKER ||
+		ent->client->NPC_class == CLASS_BOBAFETT ||
+		ent->client->NPC_class == CLASS_ROCKETTROOPER
+		)
+	{
+		ent->NPC->scriptFlags |= SCF_NAV_CAN_FLY;
+	}
+	if (ent->client->NPC_class == CLASS_VEHICLE)
+	{
+		Vehicle_Register(ent);
+	}
+	if (ent->client->ps.stats[STAT_WEAPONS] & (1 << WP_SCEPTER))
+	{
+		if (!ent->weaponModel[1])
+		{//we have the scepter, so put it in our left hand if we don't already have a second weapon
+			G_CreateG2AttachedWeaponModel(ent, weaponData[WP_SCEPTER].weaponMdl, ent->handLBolt, 1);
+		}
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[1]], "*flash");
+	}
+	if (ent->client->ps.saber[0].type == SABER_SITH_SWORD)
+	{
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[0]], "*flash");
+		G_PlayEffect(G_EffectIndex("scepter/sword.efx"), ent->weaponModel[0], ent->genericBolt1, ent->s.number, ent->currentOrigin, qtrue, qtrue);
+		//how many times can she recharge?
+		ent->count = g_spskill->integer * 2;
+		//To make sure she can do it at least once
+		ent->flags |= FL_UNDYING;
+	}
+	if (ent->client->ps.weapon == WP_NOGHRI_STICK
+		&& ent->weaponModel[0])
+	{
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[0]], "*flash");
+	}
+	// ---------- Stuff existing in Academy ----------
+
+
 }
 
 void NPC_SetMiscDefaultData(gentity_t *ent)
