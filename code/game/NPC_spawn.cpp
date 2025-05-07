@@ -562,6 +562,13 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 					Jedi_Cloak(ent);
 				}
 
+				if (ent->client->ps.weapon != WP_NONE
+					&& ent->client->ps.weapon != WP_SABER//sabers done above
+					&& (!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))//they do this themselves
+				{
+					G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handRBolt, 0);
+				}
+
 				//G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl);
 				switch (ent->client->ps.weapon)
 				{
@@ -594,6 +601,8 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 //					ent->NPC->scriptFlags |= SCF_ALT_FIRE;
 					break;
 				case WP_MELEE:
+					break;
+				case WP_NOGHRI_STICK:
 					break;
 				default:
 				case WP_BLASTER:
@@ -5704,6 +5713,7 @@ void SP_NPC_Droid_Seeker_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
+		
 		SP_NPC_Spawn_Random(self);
 	}
 	else SP_NPC_Droid_Seeker(self);
@@ -5713,6 +5723,12 @@ void SP_NPC_Droid_Remote_Random(gentity_t* self)
 	if (cg_enableRandomizer.integer)
 	{
 		CheckIfMapChanged();
+		// Their hole are too small, like r5d2 in bespin_undercity. So we can't spawn anything big like an humanoid
+		if (strcmp(lastKnownMap, "yavin2") == 0)
+		{
+			SP_NPC_Droid_Remote(self);
+			return;
+		}
 		SP_NPC_Spawn_Random(self);
 	}
 	else SP_NPC_Droid_Remote(self);

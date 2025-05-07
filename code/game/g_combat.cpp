@@ -3664,6 +3664,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	qboolean	holdingSaber = qfalse;
 	int			cliff_fall = 0;
 
+	// Posto / Randomizer : you can catch here the reason why an NPC died
+
 	//FIXME: somehow people are sometimes not completely dying???
 	if ( self->client->ps.pm_type == PM_DEAD && (meansOfDeath != MOD_SNIPER || (self->flags & FL_DISINTEGRATED)) )
 	{//do dismemberment/twitching
