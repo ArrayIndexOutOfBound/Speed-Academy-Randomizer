@@ -4710,7 +4710,10 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_Cultist_Saber_Powers(self);
 		break;
 	case 48:
-		SP_NPC_Cultist_Destroyer(self);
+		// No, these guys when dying doesn't trigger any death related script for some reason.
+		// But they are funny NGL.
+		//SP_NPC_Cultist_Destroyer(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 49:
 		SP_NPC_Cultist_Commando(self);
@@ -4995,7 +4998,10 @@ void SP_NPC_Spawn_Random_Humanoid(gentity_t* self) // Used for cutscenes or othe
 		SP_NPC_Cultist_Saber_Powers(self);
 		break;
 	case 47:
-		SP_NPC_Cultist_Destroyer(self);
+		// No, these guys when dying doesn't trigger any death related script for some reason.
+		// But they are funny NGL.
+		//SP_NPC_Cultist_Destroyer(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 48:
 		SP_NPC_Cultist_Commando(self);
