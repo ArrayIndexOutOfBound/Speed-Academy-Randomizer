@@ -244,6 +244,12 @@ extern	cvar_t  *g_reverseBoosts;
 extern	cvar_t  *g_randomBoosts;
 extern	cvar_t	*g_selfKnockback;
 
+// New additions for Randomizer
+extern cvar_t *g_randomizerEnableVrgi;
+extern cvar_t *g_randomizerEnableSpinGlitch;
+extern cvar_t *g_randomizerEnableCrouchBoost;
+extern cvar_t *g_randomizerEnableReverseBoost;
+
 extern gentity_t *player;
 //
 // g_spawn.c
