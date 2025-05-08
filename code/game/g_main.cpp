@@ -209,6 +209,12 @@ cvar_t	*g_reverseBoosts;
 cvar_t	*g_randomBoosts;
 cvar_t	*g_selfKnockback;
 
+//New additions for randomizer
+cvar_t *g_randomizerEnableVrgi;
+cvar_t *g_randomizerEnableSpinGlitch;
+cvar_t *g_randomizerEnableCrouchBoost;
+cvar_t *g_randomizerEnableReverseBoost;
+
 qboolean	stop_icarus = qfalse;
 
 extern char *G_GetLocationForEnt( gentity_t *ent );
@@ -700,6 +706,10 @@ void G_InitCvars( void ) {
 
 	gi.cvar( "g_clearstats", "1", CVAR_ROM|CVAR_NORESTART);
 
+	g_randomizerEnableVrgi = gi.cvar("g_randomizerEnableVrgi", "0", CVAR_ARCHIVE);
+	g_randomizerEnableSpinGlitch = gi.cvar("g_randomizerEnableSpinGlitch", "0", CVAR_ARCHIVE);
+	g_randomizerEnableCrouchBoost = gi.cvar("g_randomizerEnableCrouchBoost", "0", CVAR_ARCHIVE);
+	g_randomizerEnableReverseBoost = gi.cvar("g_randomizerEnableReverseBoost", "0", CVAR_ARCHIVE);
 }
 /*
 ============
@@ -748,6 +758,14 @@ void InitGame(  const char *mapname, const char *spawntarget, int checkSum, cons
 	G_InitCvars();
 
 	G_InitMemory();
+
+	// Randomizer addition
+	//Always setup movement restriction values so they're available if switched on later in the level
+	uniform_int_distribution<int> enableDisable(0, 1);
+	g_randomizerEnableVrgi->integer = enableDisable(rngRandoEnhancements);
+	g_randomizerEnableSpinGlitch->integer = enableDisable(rngRandoEnhancements);
+	g_randomizerEnableCrouchBoost->integer = enableDisable(rngRandoEnhancements);
+	g_randomizerEnableReverseBoost->integer = enableDisable(rngRandoEnhancements);
 
 	// set some level globals
 	memset( &level, 0, sizeof( level ) );

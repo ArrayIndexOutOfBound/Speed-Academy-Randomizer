@@ -3609,10 +3609,23 @@ static float PM_CrashLandDelta( vec3_t prev_vel, int waterlevel )
 	return delta;
 }
 
+bool MovementRestrictionSet(int originalConfig, int randomizerConfig) {
+	//We're controlling movement restrictions with randomizer
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandMovementRestrictions.integer) {
+		if (randomizerConfig) {
+			return true;
+		}
+	}
+	//Use regular SpeedAcademy config
+	else if (originalConfig) {
+		return true;
+	}
+	return false;
+}
+
 void PM_StickLanding( void )
 {
-	if ( g_vrgi->integer )
-	{
+	if(MovementRestrictionSet(g_vrgi->integer, g_randomizerEnableVrgi->integer)) {
 		//stick landings some
 		pm->ps->velocity[0] *= 0.5f;
 		pm->ps->velocity[1] *= 0.5f;
@@ -3640,7 +3653,7 @@ int PM_GetLandingAnim( void )
 	}
 	else if ( PM_InAirKickingAnim( anim ) )
 	{
-		if ( !g_spinGlitch->integer ) {
+		if ( !MovementRestrictionSet(g_spinGlitch->integer, g_randomizerEnableSpinGlitch->integer)) {
 			// This is not really spinning; but it is another animation that can
 			// be used to avoid VRGI. So we treat it the same as spin glitch and
 			// apply the VRGI when spin glitch is disabled.
@@ -3667,7 +3680,7 @@ int PM_GetLandingAnim( void )
 
 	if ( PM_SpinningAnim( anim ) || PM_SaberInSpecialAttack( anim ) )
 	{
-		if ( !g_spinGlitch->integer ) {
+		if ( !MovementRestrictionSet(g_spinGlitch->integer, g_randomizerEnableSpinGlitch->integer) ) {
 			PM_StickLanding();
 		} else if ( pm->ps->clientNum == 0 ) {
 			speedrun::SetLastLandingInfo({speedrun::LandingType::SpinGlitch, level.time});
@@ -4003,7 +4016,7 @@ static void PM_CrashLand( void )
 		return;
 	}
 
-	const float signEB = (g_reverseBoosts->integer ? -1.0f : 1.0f);
+	const float signEB = (MovementRestrictionSet(g_reverseBoosts->integer, g_randomizerEnableReverseBoost->integer) ? -1.0f : 1.0f);
 	if ( (pm->ps->pm_flags&PMF_TRIGGER_PUSHED) )
 	{
 		delta = 21;//?
@@ -4133,7 +4146,8 @@ static void PM_CrashLand( void )
 				}
 			}
 		}
-		else if ( (pm->cmd.upmove >= 0 || !g_crouchBoosts->integer) && !PM_InKnockDown( pm->ps ) && !PM_InRoll( pm->ps ))
+		else if ( (pm->cmd.upmove >= 0 || !MovementRestrictionSet(g_crouchBoosts->integer, g_randomizerEnableCrouchBoost->integer)) &&
+			!PM_InKnockDown( pm->ps ) && !PM_InRoll( pm->ps ))
 		{//not crouching
 			if ( signEB * delta > 10 
 				|| pm->ps->pm_flags & PMF_BACKWARDS_JUMP 
@@ -4200,7 +4214,8 @@ static void PM_CrashLand( void )
 					speedrun::SetLastLandingInfo({speedrun::LandingType::ElevationBoost, level.time});
 				}
 			}
-		} else if ( pm->cmd.upmove < 0 && g_crouchBoosts->integer && pm->ps->clientNum == 0 ) {
+		} else if ( pm->cmd.upmove < 0 && MovementRestrictionSet(g_crouchBoosts->integer, g_randomizerEnableCrouchBoost->integer) &&
+			pm->ps->clientNum == 0 ) {
 			speedrun::SetLastLandingInfo({speedrun::LandingType::CrouchBoost, level.time});
 		}
 	}
