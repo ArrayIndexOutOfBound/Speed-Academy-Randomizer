@@ -240,20 +240,148 @@ extern void	Vehicle_Register(gentity_t *ent);
 extern void RT_FlyStart( gentity_t *self );
 extern void SandCreature_ClearTimers( gentity_t *ent );
 
-// Randomizer addition
-//extern void G_CreateG2AttachedWeaponModel(gentity_t* ent, const char* weaponModel);
-//Easier to break this into another function as I refactored a bit to make it cleaner
-void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
+void Randomizer_SetupSaberNPCs(gentity_t* ent)
 {
-	// Everything commented need to be redone
-	if (ent->spawnflags & SFB_CINEMATIC)
-	{//if a cinematic guy, default us to wait bState
-		ent->NPC->behaviorState = BS_CINEMATIC;
+	//Special Case for saber droid
+	if (ent->client->NPC_class == CLASS_SABER_DROID) {
+		ent->flags |= FL_NO_KNOCKBACK;
 	}
 
-	// ---------- Stuff for new NPCs ----------
-	if (ent->client->NPC_class == CLASS_RANCOR)
+	//Setup ambushers except yavin2 saber droid - things get weird
+	if (ent->spawnflags & JSF_AMBUSH &&
+		(!Q_stricmp("yavin2", "level.mapname") && !Q_stricmp(ent->targetname, "npc_saberDroid"))) {
+		ent->NPC->scriptFlags |= SCF_IGNORE_ALERTS;
+		ent->client->noclip = qtrue;//hang
+	}
+
+	ent->client->ps.SaberDeactivate();
+	ent->client->ps.SetSaberLength(0);
+	WP_SaberInitBladeData(ent);
+	WP_SaberAddG2SaberModels(ent);
+	WP_InitForcePowers(ent);
+	Jedi_ClearTimers(ent);
+}
+
+void Randomizer_SetupEnemies(gentity_t* ent)
+{
+	ent->NPC->defaultBehavior = BS_DEFAULT;
+	if (ent->client->NPC_class == CLASS_SHADOWTROOPER)
+	{//FIXME: a spawnflag?
+		Jedi_Cloak(ent);
+	}
+
+	if (ent->client->ps.weapon != WP_NONE
+		&& ent->client->ps.weapon != WP_SABER//sabers done above
+		&& (!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))//they do this themselves
 	{
+		G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handRBolt, 0);
+	}
+
+	//G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl);
+	switch (ent->client->ps.weapon)
+	{
+		//Nothing to do with these
+		case WP_DISRUPTOR:
+		case WP_DEMP2:
+		case WP_ROCKET_LAUNCHER:
+		case WP_CONCUSSION:
+		case WP_THERMAL:
+		case WP_MELEE:
+		case WP_NOGHRI_STICK:
+		case WP_BRYAR_PISTOL:
+			break;
+		//These set the pilot flag for some reason
+		case WP_BOWCASTER:
+		case WP_REPEATER:
+		case WP_FLECHETTE:
+			NPCInfo->scriptFlags |= SCF_PILOT;
+			break;
+		case WP_BLASTER_PISTOL:
+			NPCInfo->scriptFlags |= SCF_PILOT;
+			if (ent->client->NPC_class == CLASS_REBORN &&
+				ent->NPC->rank >= RANK_LT_COMM &&
+				(!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))//they do this themselves
+			{
+				//dual blaster pistols, so add the left-hand one, too
+				G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handLBolt, 1);
+			}
+			break;
+		//Prob a stormtrooper or similar, do stormtrooper setup
+		case WP_BLASTER:
+		default:
+			ST_ClearTimers(ent);
+			if (ent->NPC->rank >= RANK_COMMANDER)
+			{//commanders use alt-fire
+				ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+			}
+			if (!Q_stricmp("rodian2", ent->NPC_type))
+			{
+				ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+			}
+			break;
+	}
+}
+
+void Randomizer_SetupNPCByClass(gentity_t* ent)
+{
+	//***I'm not sure whether I should leave this as a TEAM_ switch, I think NPC_class may be more appropriate - dmv
+	//Amber - whoever dmv is they're right, this should be based on class
+	// Posto : sup'
+	switch (ent->client->NPC_class) {
+	case CLASS_SEEKER:
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		ent->NPC->stats.move = MT_FLYSWIM;
+		ent->count = 30; // SEEKER shot ammo count
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		ent->client->moveType = MT_FLYSWIM;
+		ent->count = 30; // SEEKER shot ammo count
+		return;
+	case CLASS_PROBE:
+	case CLASS_REMOTE:
+	case CLASS_INTERROGATOR:
+	case CLASS_SENTRY:
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		ent->NPC->stats.move = MT_FLYSWIM;
+		break;
+	case CLASS_JEDI:
+	case CLASS_LUKE:
+	case CLASS_TAVION:
+	case CLASS_REBORN:
+	case CLASS_DESANN:
+	case CLASS_SHADOWTROOPER:
+	case CLASS_SABER_DROID:
+		//All saber wielders
+		Randomizer_SetupSaberNPCs(ent);
+		break;
+	case CLASS_GONK:
+		// I guess we generically make them player usable
+		ent->svFlags |= SVF_PLAYER_USABLE;
+
+		// Not even sure if we want to give different levels of batteries?  ...Or even that these are the values we'd want to use.
+		switch (g_spskill->integer)
+		{
+			case 0:	//	EASY
+				ent->client->ps.batteryCharge = MAX_BATTERIES * 0.8f;
+				break;
+			case 1:	//	MEDIUM
+				ent->client->ps.batteryCharge = MAX_BATTERIES * 0.75f;
+				break;
+			default:
+			case 2:	//	HARD
+				ent->client->ps.batteryCharge = MAX_BATTERIES * 0.5f;
+				break;
+		}
+		break;
+	case CLASS_R2D2: // No weapons for astromech droids please
+	case CLASS_R5D2:
+		break;
+	case CLASS_RANCOR:
 		if (Q_stricmp("mutant_rancor", ent->NPC_type) == 0)
 		{
 			ent->spawnflags |= 1;//just so I know it's a mutant rancor as opposed to a normal one
@@ -266,25 +394,22 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 			ent->mass = 1000;
 		}
 		ent->flags |= FL_NO_KNOCKBACK;
-	}
-	else if (ent->client->NPC_class == CLASS_SAND_CREATURE)
-	{//???
+		break;
+	case CLASS_SAND_CREATURE:
 		ent->clipmask = CONTENTS_SOLID | CONTENTS_MONSTERCLIP;//it can go through others
 		ent->contents = 0;//can't be hit?
 		ent->takedamage = qfalse;//can't be killed
 		ent->flags |= FL_NO_KNOCKBACK;
 		SandCreature_ClearTimers(ent);
-	}
-	else if (ent->client->NPC_class == CLASS_BOBAFETT)
-	{//set some stuff, precache
+		break;
+	case CLASS_BOBAFETT:
 		ent->client->ps.forcePowersKnown |= (1 << FP_LEVITATION);
 		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
 		ent->client->ps.forcePower = 100;
 		ent->NPC->scriptFlags |= (SCF_NAV_CAN_FLY | SCF_FLY_WITH_JET | SCF_NAV_CAN_JUMP);
 		NPC->flags |= FL_UNDYING;		// Can't Kill Boba
-	}
-	else if (ent->client->NPC_class == CLASS_ROCKETTROOPER)
-	{//set some stuff, precache
+		break;
+	case CLASS_ROCKETTROOPER:
 		ent->client->ps.forcePowersKnown |= (1 << FP_LEVITATION);
 		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
 		ent->client->ps.forcePower = 100;
@@ -301,30 +426,90 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 		{//spotlight
 			ent->client->ps.eFlags |= EF_SPOTLIGHT;
 		}
-	}
-	else if (ent->client->NPC_class == CLASS_SABER_DROID)
-	{
-		ent->flags |= FL_NO_KNOCKBACK;
-	}
-	else if (ent->client->NPC_class == CLASS_SABOTEUR)
-	{//can cloak
-		ent->NPC->aiFlags |= NPCAI_SHIELDS;//give them the ability to cloak
-		if ((ent->spawnflags & 16))
-		{//start cloaked
-			Saboteur_Cloak(ent);
-		}
-	}
-	else if (ent->client->NPC_class == CLASS_ASSASSIN_DROID)
-	{
+		break;
+	case CLASS_ASSASSIN_DROID:
 		ent->client->ps.stats[STAT_ARMOR] = 250;	// start with full armor
 		if (ent->s.weapon == WP_BLASTER)
 		{
 			ent->NPC->scriptFlags |= SCF_ALT_FIRE;
 		}
 		ent->flags |= (FL_NO_KNOCKBACK);
+		break;
+	case CLASS_SABOTEUR:
+		ent->NPC->aiFlags |= NPCAI_SHIELDS;//give them the ability to cloak
+		if ((ent->spawnflags & 16))
+		{//start cloaked
+			Saboteur_Cloak(ent);
+		}
+		break;
+	case CLASS_HOWLER:
+		Howler_ClearTimers(ent);
+		ent->NPC->scriptFlags |= SCF_NO_FALLTODEATH;
+		ent->flags |= FL_NO_IMPACT_DMG;
+		ent->NPC->scriptFlags |= SCF_NAV_CAN_JUMP;	// These jokers can jump
+		break;
+	default:
+		if (RandomizerUtils::GetClassTeamByClass(ent->client->NPC_class) == TEAM_PLAYER) //Any other NPCs which would normally be friendsly
+		{
+			if (ent->client->ps.weapon == WP_BLASTER || ent->client->ps.weapon == WP_THERMAL) {
+				//All blaster enemies full auto at the player
+				ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+			}
+		}
+		else if (RandomizerUtils::GetClassTeamByClass(ent->client->NPC_class) == TEAM_ENEMY) { //Any other NPCs which would normally be enemies
+			{
+				Randomizer_SetupEnemies(ent);
+			}
+		}
+
+		//Extra stuff for cinematic chars and behaviour set for friendly NPCS
+		if (ent->client->NPC_class == CLASS_KYLE || (ent->spawnflags & SFB_CINEMATIC))
+		{
+			ent->NPC->defaultBehavior = BS_CINEMATIC;
+		}
+		else if (ent->client->playerTeam == TEAM_PLAYER)
+		{
+			ent->NPC->defaultBehavior = BS_FOLLOW_LEADER;
+			ent->client->leader = &g_entities[0];
+		}
+
+		//Shields for ATSTs/Mark1s
+		if (ent->client->NPC_class == CLASS_ATST || ent->client->NPC_class == CLASS_MARK1) // chris/steve/kevin requested that the mark1 be shielded also
+		{
+			ent->flags |= (FL_SHIELDED | FL_NO_KNOCKBACK);
+		}
 	}
-	if (ent->spawnflags & 4096)
-	{
+}
+
+void Randomizer_SetTeamInfo(gentity_t* ent)
+{
+	switch (ent->client->playerTeam) {
+	case TEAM_PLAYER:
+		ent->client->enemyTeam = TEAM_ENEMY;
+		ent->client->clientInfo.team = TEAM_PLAYER;
+		ent->client->sess.sessionTeam = TEAM_PLAYER;
+		break;
+	case TEAM_ENEMY:
+	case TEAM_FREE:
+		ent->client->enemyTeam = TEAM_PLAYER;
+		break;
+	}
+
+	//If enemy is TEAM_NEUTRAL we'll never aggro so default to targeting player
+	if (ent->client->enemyTeam == TEAM_NEUTRAL) {
+		ent->client->enemyTeam = TEAM_PLAYER;
+	}
+}
+
+//Handle spawn flags and a few type specific setup things
+void Randomizer_InitialSetupNPC(gentity_t* ent)
+{
+	//if a cinematic guy, default us to wait bState
+	if (ent->spawnflags & SFB_CINEMATIC) {
+		ent->NPC->behaviorState = BS_CINEMATIC;
+	}
+
+	if (ent->spawnflags & 4096) {
 		ent->NPC->scriptFlags |= SCF_NO_GROUPS;//don't use combat points or group AI
 	}
 
@@ -361,6 +546,11 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	{
 		ent->NPC->scriptFlags |= SCF_DONT_FLEE;
 	}
+	if (Q_stricmp("chewie", ent->NPC_type))
+	{
+		//in case chewie ever loses his gun...
+		ent->NPC->aiFlags |= NPCAI_HEAVY_MELEE;
+	}
 	if (!Q_stricmp("cultist_destroyer", ent->NPC_type))
 	{
 		ent->splashDamage = 1000;
@@ -370,12 +560,19 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 		ent->NPC->scriptFlags |= (SCF_DONT_FLEE | SCF_IGNORE_ALERTS);
 		ent->NPC->ignorePain = qtrue;
 	}
-	if (Q_stricmp("chewie", ent->NPC_type))
+
+	if (ent->client->NPC_class == CLASS_TUSKEN)
 	{
-		//in case chewie ever loses his gun...
-		ent->NPC->aiFlags |= NPCAI_HEAVY_MELEE;
+		if (g_spskill->integer > 1)
+		{//on hard, tusken raiders are faster than you
+			ent->NPC->stats.runSpeed = 280;
+			ent->NPC->stats.walkSpeed = 65;
+		}
 	}
-	//==================
+}
+
+//Initialise Sabers
+void Randomizer_SetupSaber(gentity_t* ent) {
 	if (ent->client->ps.saber[0].type != SABER_NONE
 		&& (!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))
 	{//if I'm equipped with a saber, initialize it (them)
@@ -388,6 +585,11 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 		}
 		Jedi_ClearTimers(ent);
 	}
+}
+
+//Initialise force powers
+void Randomizer_SetupForcePowers(gentity_t* ent)
+{
 	if (ent->client->ps.forcePowersKnown != 0)
 	{
 		WP_InitForcePowers(ent);
@@ -396,13 +598,10 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 			ent->NPC->scriptFlags |= SCF_NAV_CAN_JUMP;	// anyone who has any force jump can jump
 		}
 	}
-	if (ent->client->NPC_class == CLASS_HOWLER)
-	{
-		Howler_ClearTimers(ent);
-		ent->NPC->scriptFlags |= SCF_NO_FALLTODEATH;
-		ent->flags |= FL_NO_IMPACT_DMG;
-		ent->NPC->scriptFlags |= SCF_NAV_CAN_JUMP;	// These jokers can jump
-	}
+}
+
+void Randomizer_SetBossInfo(gentity_t* ent)
+{
 	if (ent->client->NPC_class == CLASS_DESANN
 		|| ent->client->NPC_class == CLASS_TAVION
 		|| ent->client->NPC_class == CLASS_LUKE
@@ -417,232 +616,69 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	{
 		ent->NPC->aiFlags |= NPCAI_SUBBOSS_CHARACTER;
 	}
-	if (ent->client->NPC_class == CLASS_TUSKEN)
+}
+
+//Setup Scepter, Sith sword, Noghri stick
+void Randomizer_SetupSpecialWeapons(gentity_t* ent)
+{
+	//Scepter setup
+	if (ent->client->ps.stats[STAT_WEAPONS] & (1 << WP_SCEPTER))
 	{
-		if (g_spskill->integer > 1)
-		{//on hard, tusken raiders are faster than you
-			ent->NPC->stats.runSpeed = 280;
-			ent->NPC->stats.walkSpeed = 65;
+		if (!ent->weaponModel[1])
+		{//we have the scepter, so put it in our left hand if we don't already have a second weapon
+			G_CreateG2AttachedWeaponModel(ent, weaponData[WP_SCEPTER].weaponMdl, ent->handLBolt, 1);
 		}
-	}
-	// ---------- Stuff for new NPCs ----------
-
-
-
-
-
-	switch (ent->client->playerTeam) {
-	case TEAM_PLAYER:
-		ent->client->enemyTeam = TEAM_ENEMY;
-		ent->client->clientInfo.team = TEAM_PLAYER;
-		ent->client->sess.sessionTeam = TEAM_PLAYER;
-		break;
-	case TEAM_ENEMY:
-	case TEAM_FREE:
-		ent->client->enemyTeam = TEAM_PLAYER;
-		break;	
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[1]], "*flash");
 	}
 
-	if (ent->client->enemyTeam == TEAM_NEUTRAL) {
-		ent->client->enemyTeam = TEAM_PLAYER; //If enemy is TEAM_NEUTRAL we'll never aggro so default to targeting player
+	//Sith sword setup
+	if (ent->client->ps.saber[0].type == SABER_SITH_SWORD)
+	{
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[0]], "*flash");
+		G_PlayEffect(G_EffectIndex("scepter/sword.efx"), ent->weaponModel[0], ent->genericBolt1, ent->s.number, ent->currentOrigin, qtrue, qtrue);
+		//how many times can she recharge?
+		ent->count = g_spskill->integer * 2;
+		//To make sure she can do it at least once
+		ent->flags |= FL_UNDYING;
 	}
 
-	//***I'm not sure whether I should leave this as a TEAM_ switch, I think NPC_class may be more appropriate - dmv
-	//Amber - whoever dmv is they're right, this should be based on class
-	// Posto : sup'
-	switch (ent->client->NPC_class) {
-	case CLASS_SEEKER:
-		ent->NPC->defaultBehavior = BS_DEFAULT;
-		ent->client->ps.gravity = 0;
-		ent->svFlags |= SVF_CUSTOM_GRAVITY;
-		//ent->NPC->stats.moveType = MT_FLYSWIM;
-		ent->NPC->stats.move = MT_FLYSWIM;
-		ent->count = 30; // SEEKER shot ammo count
+	//Noghri Stick setup
+	if (ent->client->ps.weapon == WP_NOGHRI_STICK
+		&& ent->weaponModel[0])
+	{
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[0]], "*flash");
+	}
+}
 
-		ent->NPC->defaultBehavior = BS_DEFAULT;
-		ent->client->ps.gravity = 0;
-		ent->svFlags |= SVF_CUSTOM_GRAVITY;
-		ent->client->moveType = MT_FLYSWIM;
-		ent->count = 30; // SEEKER shot ammo count
-		return;
-	case CLASS_PROBE:
-	case CLASS_REMOTE:
-	case CLASS_INTERROGATOR:
-	case CLASS_SENTRY:
-		ent->NPC->defaultBehavior = BS_DEFAULT;
-		ent->client->ps.gravity = 0;
-		ent->svFlags |= SVF_CUSTOM_GRAVITY;
-		//ent->NPC->stats.moveType = MT_FLYSWIM;
-		ent->NPC->stats.move = MT_FLYSWIM;
-		break;
-	case CLASS_JEDI:
-	case CLASS_LUKE:
-	case CLASS_TAVION:
-	case CLASS_REBORN:
-	case CLASS_DESANN:
-	case CLASS_SHADOWTROOPER:
-	case CLASS_SABER_DROID:
-		//All saber wielders
-		//ent->client->ps.saberActive = qfalse;
-		ent->client->ps.SaberDeactivate();
-		//ent->client->ps.saberLength = 0;
-		ent->client->ps.SetSaberLength(0);
-		WP_SaberInitBladeData(ent);
-		WP_SaberAddG2SaberModels(ent);
-		//G_CreateG2AttachedWeaponModel(ent, ent->client->ps.saber->model, 1, 1);
-		WP_InitForcePowers(ent);
-		Jedi_ClearTimers(ent);
-		if (ent->spawnflags & JSF_AMBUSH &&
-			(!Q_stricmp("yavin2", "level.mapname") && !Q_stricmp(ent->targetname, "npc_saberDroid"))) //Do not apply ambush logic to saber droid
-		{//ambusher
-			ent->NPC->scriptFlags |= SCF_IGNORE_ALERTS;
-			ent->client->noclip = qtrue;//hang
-		}
-		break;
-	case CLASS_GONK:
-		// I guess we generically make them player usable
-		ent->svFlags |= SVF_PLAYER_USABLE;
-
-		// Not even sure if we want to give different levels of batteries?  ...Or even that these are the values we'd want to use.
-		switch (g_spskill->integer)
-		{
-		case 0:	//	EASY
-			ent->client->ps.batteryCharge = MAX_BATTERIES * 0.8f;
-			break;
-		case 1:	//	MEDIUM
-			ent->client->ps.batteryCharge = MAX_BATTERIES * 0.75f;
-			break;
-		default:
-		case 2:	//	HARD
-			ent->client->ps.batteryCharge = MAX_BATTERIES * 0.5f;
-			break;
-		}
-		break;
-	case CLASS_R2D2: // No weapons for astromech droids please
-	case CLASS_R5D2:
-		break;
-	default:
-		if (ent->client->ps.weapon != WP_NONE)
-		{
-			//G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl);
-		}
-		if (RandomizerUtils::GetClassTeamByClass(ent->client->NPC_class) == TEAM_PLAYER) //Any other NPCs which would normally be friendsly
-		{
-			switch (ent->client->ps.weapon)
-			{
-			case WP_BRYAR_PISTOL://FIXME: new weapon: imp blaster pistol
-			case WP_BLASTER_PISTOL:
-			case WP_DISRUPTOR:
-			case WP_BOWCASTER:
-			case WP_REPEATER:
-			case WP_DEMP2:
-			case WP_FLECHETTE:
-			case WP_ROCKET_LAUNCHER:
-			default:
-				break;
-			case WP_THERMAL:
-			case WP_BLASTER:
-				//FIXME: health in NPCs.cfg, and not all blaster users are stormtroopers
-				//ent->health = 25;
-				//FIXME: not necc. a ST
-				ST_ClearTimers(ent);
-				if (ent->NPC->rank >= RANK_LT || ent->client->ps.weapon == WP_THERMAL)
-				{//officers, grenade-throwers use alt-fire
-					//ent->health = 50;
-					ent->NPC->scriptFlags |= SCF_ALT_FIRE;
-				}
-				break;
-			}
-		}
-		else if (RandomizerUtils::GetClassTeamByClass(ent->client->NPC_class) == TEAM_ENEMY) { //Any other NPCs which would normally be enemies
-			{
-				ent->NPC->defaultBehavior = BS_DEFAULT;
-				if (ent->client->NPC_class == CLASS_SHADOWTROOPER)
-				{//FIXME: a spawnflag?
-					Jedi_Cloak(ent);
-				}
-
-				if (ent->client->ps.weapon != WP_NONE
-					&& ent->client->ps.weapon != WP_SABER//sabers done above
-					&& (!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))//they do this themselves
-				{
-					G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handRBolt, 0);
-				}
-
-				//G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl);
-				switch (ent->client->ps.weapon)
-				{
-				case WP_BRYAR_PISTOL:
-					break;
-				case WP_BLASTER_PISTOL:
-					break;
-				case WP_DISRUPTOR:
-					//Sniper
-					ent->NPC->scriptFlags |= SCF_ALT_FIRE;//FIXME: use primary fire sometimes?  Up close?  Different class of NPC?
-					break;
-				case WP_BOWCASTER:
-					break;
-				case WP_REPEATER:
-					//machine-gunner
-					break;
-				case WP_DEMP2:
-					break;
-				case WP_FLECHETTE:
-					//shotgunner
-					if (!Q_stricmp("stofficeralt", ent->NPC_type))
-					{
-						ent->NPC->scriptFlags |= SCF_ALT_FIRE;
-					}
-					break;
-				case WP_ROCKET_LAUNCHER:
-					break;
-				case WP_THERMAL:
-					//Gran, use main, bouncy fire
-//					ent->NPC->scriptFlags |= SCF_ALT_FIRE;
-					break;
-				case WP_MELEE:
-					break;
-				case WP_NOGHRI_STICK:
-					break;
-				default:
-				case WP_BLASTER:
-					//FIXME: health in NPCs.cfg, and not all blaster users are stormtroopers
-					//FIXME: not necc. a ST
-					ST_ClearTimers(ent);
-					if (ent->NPC->rank >= RANK_COMMANDER)
-					{//commanders use alt-fire
-						ent->NPC->scriptFlags |= SCF_ALT_FIRE;
-					}
-					if (!Q_stricmp("rodian2", ent->NPC_type))
-					{
-						ent->NPC->scriptFlags |= SCF_ALT_FIRE;
-					}
-					break;
-				}
-			}
-		}
-
-		//Extra stuff for cinematic chars and behaviour set for friendly NPCS
-		if (ent->client->NPC_class == CLASS_KYLE || (ent->spawnflags & SFB_CINEMATIC))
-		{
-			ent->NPC->defaultBehavior = BS_CINEMATIC;
-		}
-		else if (ent->client->playerTeam == TEAM_PLAYER)
-		{
-			ent->NPC->defaultBehavior = BS_FOLLOW_LEADER;
-			ent->client->leader = &g_entities[0];
-		}
-
-		//Shields for ATSTs/Mark1s
-		if (ent->client->NPC_class == CLASS_ATST || ent->client->NPC_class == CLASS_MARK1) // chris/steve/kevin requested that the mark1 be shielded also
-		{
-			ent->flags |= (FL_SHIELDED | FL_NO_KNOCKBACK);
+void Randomizer_SetupWeaponModel(gentity_t* ent) {
+	//If we have a weapon and we don't have a weapon model
+	if (ent->client->ps.weapon &&
+		ent->client->ps.weapon != WP_NONE &&
+		ent->client->ps.weapon != WP_MELEE &&
+		(!ent->weaponModel[0] || ent->weaponModel[0] == -1)) { //of course -1 is truthy why wouldn't it be?
+		//Create one
+		G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handRBolt, 0);
+		if (!ent->weaponModel[0] || ent->weaponModel[0] == -1) {
+			ent->weaponModel[0] = ent->client->ps.weapon;
 		}
 	}
+}
+// Randomizer addition
+//extern void G_CreateG2AttachedWeaponModel(gentity_t* ent, const char* weaponModel);
+//Easier to break this into another function as I refactored a bit to make it cleaner
+void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
+{
+	//Broke these into seperate functions for readability
+	Randomizer_InitialSetupNPC(ent);
+	Randomizer_SetupSaber(ent);
+	Randomizer_SetupForcePowers(ent);
+	Randomizer_SetBossInfo(ent);
+	Randomizer_SetTeamInfo(ent);
+	Randomizer_SetupNPCByClass(ent);
+	Randomizer_SetupSpecialWeapons(ent);
+	Randomizer_SetupWeaponModel(ent);
 
-	// ---------- Stuff existing in Academy ----------
-	// Set CAN FLY Flag for Navigation On The Following Classes
-	//----------------------------------------------------------
+	//Final check to make sure flying NPCs can fly
 	if (ent->client->NPC_class == CLASS_PROBE ||
 		ent->client->NPC_class == CLASS_REMOTE ||
 		ent->client->NPC_class == CLASS_SEEKER ||
@@ -655,35 +691,12 @@ void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
 	{
 		ent->NPC->scriptFlags |= SCF_NAV_CAN_FLY;
 	}
+
+	//Vehicles are vehicles
 	if (ent->client->NPC_class == CLASS_VEHICLE)
 	{
 		Vehicle_Register(ent);
 	}
-	if (ent->client->ps.stats[STAT_WEAPONS] & (1 << WP_SCEPTER))
-	{
-		if (!ent->weaponModel[1])
-		{//we have the scepter, so put it in our left hand if we don't already have a second weapon
-			G_CreateG2AttachedWeaponModel(ent, weaponData[WP_SCEPTER].weaponMdl, ent->handLBolt, 1);
-		}
-		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[1]], "*flash");
-	}
-	if (ent->client->ps.saber[0].type == SABER_SITH_SWORD)
-	{
-		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[0]], "*flash");
-		G_PlayEffect(G_EffectIndex("scepter/sword.efx"), ent->weaponModel[0], ent->genericBolt1, ent->s.number, ent->currentOrigin, qtrue, qtrue);
-		//how many times can she recharge?
-		ent->count = g_spskill->integer * 2;
-		//To make sure she can do it at least once
-		ent->flags |= FL_UNDYING;
-	}
-	if (ent->client->ps.weapon == WP_NOGHRI_STICK
-		&& ent->weaponModel[0])
-	{
-		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[0]], "*flash");
-	}
-	// ---------- Stuff existing in Academy ----------
-
-
 }
 
 void NPC_SetMiscDefaultData(gentity_t *ent)
