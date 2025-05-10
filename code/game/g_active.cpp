@@ -12,6 +12,7 @@
 #ifdef _DEBUG
 	#include <float.h>
 #endif //_DEBUG
+#include "../randomizer/RandomizerUtils.h"
 
 #define	SLOWDOWN_DIST	128.0f
 #define	MIN_NPC_SPEED	16.0f
@@ -4831,6 +4832,38 @@ void ClientThink_real( gentity_t *ent, usercmd_t *ucmd )
 	if ( ent->s.number == 0 ) 
 	{
 extern cvar_t	*g_skippingcin;
+
+		if (!(ent->s.eFlags & EF_LOCKED_TO_WEAPON) && !(ent->s.eFlags & EF_HELD_BY_RANCOR) &&
+			!(ent->s.eFlags & EF_HELD_BY_WAMPA) && cg_enableRandomizer.integer &&
+			cg_enableRandomizerEnhancements.integer && cg_enableRandMovementType.integer) {
+			//initialize timer if not set
+			if (!RandomizerUtils::flyswimCheckTime)
+			{
+				RandomizerUtils::flyswimCheckTime = level.time + RandomizerUtils::FLYSWIM_TIMER;
+			}
+			else if (RandomizerUtils::flyswimCheckTime <= level.time) {
+				if (ent->client->moveType == MT_STATIC) {
+					//1 in 50 chance
+					uniform_int_distribution<int> flySwimChange(1, 50);
+					if (flySwimChange(rngRandoEnhancements) == 1) {
+ 						ent->client->moveType = MT_FLYSWIM;
+						ent->client->ps.gravity = 0;
+						ent->svFlags |= SVF_CUSTOM_GRAVITY;
+						
+					}
+				} else {
+					//50/50 chance to reset
+					uniform_int_distribution<int> resetMovementChance(0, 1);
+					if (resetMovementChance(rngRandoEnhancements)) {
+						ent->client->moveType = MT_STATIC;
+						ent->client->ps.gravity = DEFAULT_GRAVITY;
+						ent->svFlags &= ~SVF_CUSTOM_GRAVITY;
+					}
+				}
+				//Reset timer
+				RandomizerUtils::flyswimCheckTime = level.time + RandomizerUtils::FLYSWIM_TIMER;
+			}
+		}
 
 		if ( ent->s.eFlags & EF_LOCKED_TO_WEAPON )
 		{
