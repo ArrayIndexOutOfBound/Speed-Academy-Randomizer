@@ -1593,11 +1593,11 @@
 
 		itemDef 
 		{	
-			name				enable_safeStart
+			name				enable_safe_companions
 			group				assists
       		type				ITEM_TYPE_MULTI
-			text				"Maybe add some assists for Academy"
-			cvar				"cg_enableSafeStart"
+			text				"Safe NPC Behaviour"
+			cvar				"cg_safeCompanions"
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
 			rect				305 231 300 20
 	   		textalign			ITEM_ALIGN_RIGHT
@@ -1607,7 +1607,7 @@
 			textscale 			0.8
 			forecolor			1 1 1 1
 			visible			0
-			descText			"Maybe add some assists for Academy"
+			descText			"Allied NPC safety e.g. run away from saber enemies if I don't have one"
 			action
 			{
 				play			"sound/interface/button1.wav"

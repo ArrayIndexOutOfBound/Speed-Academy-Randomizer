@@ -87,6 +87,7 @@ extern void NPC_BSSearch (void);
 extern void NPC_BSSearchStart (int	homeWp, bState_t bState);
 extern void NPC_BSWander (void);
 extern qboolean NPC_BSFlee( void );
+extern qboolean NPC_BSRetreat(void);
 extern void NPC_StartFlee( gentity_t *enemy, vec3_t dangerPoint, int dangerLevel, int fleeTimeMin, int fleeTimeMax );
 extern void G_StartFlee( gentity_t *self, gentity_t *enemy, vec3_t dangerPoint, int dangerLevel, int fleeTimeMin, int fleeTimeMax );
 

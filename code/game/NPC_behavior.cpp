@@ -13,6 +13,7 @@ we need it...
 
 // Randomizer addition
 extern vmCvar_t	cg_enableRandomizer;
+extern vmCvar_t	cg_safeCompanions;
 
 extern cvar_t	*g_AIsurrender;
 extern	qboolean	showBBoxes;
@@ -818,6 +819,17 @@ void NPC_BSFollowLeaderRandomizer(void)
 			{//not already in a temp bState
 				//go after the guy
 				NPCInfo->tempBehavior = BS_HUNT_AND_KILL;
+				NPC_UpdateAngles(qtrue, qtrue);
+				return;
+			}
+		}
+
+		//Don't target an enemy if they have a saber and we do not so we don't die due to deflected bolts
+		if (cg_enableRandomizer.integer && cg_safeCompanions.integer && NPC->client && NPC->enemy->client) {
+			if (NPC->client->ps.weapon != WP_SABER && NPC->enemy->client->playerTeam != TEAM_PLAYER && NPC->enemy->client->ps.weapon == WP_SABER) {
+				//Bravely bravely run away
+				NPCInfo->tempBehavior = BS_RETREAT;
+				TIMER_Set(NPC, "retreat", 1000);
 				NPC_UpdateAngles(qtrue, qtrue);
 				return;
 			}
@@ -1877,6 +1889,165 @@ void NPC_JawaFleeSound( void )
 		G_SoundOnEnt(NPC, CHAN_VOICE, "sound/chars/jawa/misc/ooh-tee-nee.wav" );
 		NPCInfo->blockedSpeechDebounceTime = level.time + 2000;
 	}
+}
+
+qboolean NPC_BSRetreat(void)
+{
+	bool		enemyRecentlySeen = false;
+	float		enemyTooCloseDist = 50.0f;
+	bool		reachedEscapePoint = false;
+	bool		hasEscapePoint = false;
+	bool		moveSuccess = false;
+
+	// Check For Enemies And Alert Events
+	//------------------------------------
+	NPC_CheckEnemy(qtrue, qfalse);
+	NPC_CheckAlertEvents(qtrue, qtrue, -1, qfalse, AEL_DANGER, qfalse);
+	if (NPC->enemy && G_ClearLOS(NPC, NPC->enemy))
+	{
+		NPCInfo->enemyLastSeenTime = level.time;
+	}
+	enemyRecentlySeen = (NPC->enemy && (level.time - NPCInfo->enemyLastSeenTime) < 3000);
+	if (enemyRecentlySeen)
+	{
+		if (NPC->enemy->client && NPC->enemy->client->NPC_class == CLASS_RANCOR)
+		{
+			enemyTooCloseDist = 400.0f;
+		}
+		enemyTooCloseDist += NPC->maxs[0] + NPC->enemy->maxs[0];
+	}
+
+	// If Attempting To Get To An Entity That Is Gone, Clear The Pointer
+	//-------------------------------------------------------------------
+	if (NPCInfo->goalEntity
+		&& !Q3_TaskIDPending(NPC, TID_MOVE_NAV)
+		&& NPC->enemy
+		&& Distance(NPCInfo->goalEntity->currentOrigin, NPC->enemy->currentOrigin) < enemyTooCloseDist)
+	{
+		//our goal is too close to our enemy, dump it...
+		NPCInfo->goalEntity = NULL;
+	}
+	if (NPCInfo->goalEntity && !NPCInfo->goalEntity->inuse)
+	{
+		NPCInfo->goalEntity = 0;
+	}
+	hasEscapePoint = (NPCInfo->goalEntity && NPCInfo->goalRadius != 0.0f);
+
+	STEER::Activate(NPC);
+	{
+		// Have We Reached The Escape Point?
+		//-----------------------------------
+		if (hasEscapePoint && STEER::Reached(NPC, NPCInfo->goalEntity, NPCInfo->goalRadius, false))
+		{
+			if (Q3_TaskIDPending(NPC, TID_MOVE_NAV))
+			{
+				Q3_TaskIDComplete(NPC, TID_MOVE_NAV);
+			}
+			reachedEscapePoint = true;
+		}
+
+
+		// If Super Close To The Enemy, Run In The Other Direction
+		//---------------------------------------------------------
+		if (enemyRecentlySeen &&
+			Distance(NPC->enemy->currentOrigin, NPC->currentOrigin) < enemyTooCloseDist)
+		{
+			STEER::Evade(NPC, NPC->enemy);
+			STEER::AvoidCollisions(NPC);
+		}
+
+		// If Already At The Escape Point, don't move
+		//-------------------------------------------------------------
+		else if (reachedEscapePoint)
+		{
+			STEER::Stop(NPC);
+		}
+		else
+		{
+			// Try To Get To The Escape Point
+			//--------------------------------
+			if (hasEscapePoint)
+			{
+				moveSuccess = STEER::GoTo(NPC, NPCInfo->goalEntity, true);
+				if (!moveSuccess)
+				{
+					moveSuccess = NAV::GoTo(NPC, NPCInfo->goalEntity, 0.3f);
+				}
+			}
+
+			// Cant Get To The Escape Point, So If There Is An Enemy
+			//-------------------------------------------------------
+			if (!moveSuccess && enemyRecentlySeen)
+			{
+				// Try To Get To The Farthest Combat Point From Him
+				//--------------------------------------------------
+				NAV::TNodeHandle Nbr = NAV::ChooseFarthestNeighbor(NPC, NPC->enemy->currentOrigin, 0.25f);
+				if (Nbr > 0)
+				{
+					moveSuccess = STEER::GoTo(NPC, NAV::GetNodePosition(Nbr), true);
+					if (!moveSuccess)
+					{
+						moveSuccess = NAV::GoTo(NPC, Nbr, 0.3f);
+					}
+				}
+			}
+
+			// If We Still Can't (Or Don't Need To) Move, Just Stop
+			//------------------------------------------------------
+			if (!moveSuccess)
+			{
+				STEER::Stop(NPC);
+			}
+		}
+	}
+	STEER::DeActivate(NPC, &ucmd);
+
+
+	// Is There An Enemy Around?
+	//---------------------------
+	if (enemyRecentlySeen)
+	{
+		// Time To Choose A New Escape Point?
+		//------------------------------------
+		if ((!hasEscapePoint || reachedEscapePoint) && TIMER_Done(NPC, "FindNewEscapePointDebounce"))
+		{
+			TIMER_Set(NPC, "FindNewEscapePointDebounce", 2500);
+
+			int escapePoint = NPC_FindCombatPoint(
+				NPC->currentOrigin,
+				NPC->enemy->currentOrigin,
+				NPC->currentOrigin,
+				CP_COVER | CP_AVOID_ENEMY | CP_HAS_ROUTE,
+				128);
+			if (escapePoint != -1)
+			{
+				NPC_JawaFleeSound();
+				NPC_SetCombatPoint(escapePoint);
+				NPC_SetMoveGoal(NPC, level.combatPoints[escapePoint].origin, 8, qtrue, escapePoint);
+			}
+		}
+	}
+
+
+	// If Only Temporarly In Flee, Think About Perhaps Returning To Combat
+	//---------------------------------------------------------------------
+	if (NPCInfo->tempBehavior == BS_RETREAT &&
+		TIMER_Done(NPC, "retreat") &&
+		NPC->s.weapon != WP_NONE &&
+		NPC->s.weapon != WP_MELEE
+		)
+	{
+		NPCInfo->tempBehavior = BS_DEFAULT;
+	}
+
+	// Always Update Angles
+	//----------------------
+	NPC_UpdateAngles(qtrue, qtrue);
+	if (reachedEscapePoint)
+	{
+		return qtrue;
+	}
+	return qfalse;
 }
 
 extern gentity_t *NPC_SearchForWeapons( void );

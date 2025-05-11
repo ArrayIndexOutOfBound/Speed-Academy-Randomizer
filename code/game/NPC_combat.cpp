@@ -1109,7 +1109,7 @@ void ShootThink( void )
 	if ( level.time < NPCInfo->shotTime ) 
 	{
 		return;
-	}
+		}
 
 	ucmd.buttons |= BUTTON_ATTACK;
 
