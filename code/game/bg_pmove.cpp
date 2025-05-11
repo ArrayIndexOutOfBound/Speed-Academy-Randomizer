@@ -1235,6 +1235,7 @@ static qboolean PM_CheckJump( void )
 						for (int i = 1; i < 4; i++)
 						{
 							uniform_int_distribution<int> localDist(1, 768);
+
 							int newHeight = localDist(rngRandoEnhancements) + 10; // 10 as the minimum, 768 as the maximum, which is double force jump 3
 							forceJumpHeight[i] = newHeight;
 							// forceJumpHeightMax is not declared in this score, maybe it's not needed ?
