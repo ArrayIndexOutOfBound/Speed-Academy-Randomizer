@@ -447,6 +447,7 @@ vmCvar_t	cg_enableRandJumpSound;
 vmCvar_t	memorized_player_health;
 vmCvar_t	cg_enableRandAllMissions;
 vmCvar_t	cg_enableRandMovementRestrictions;
+vmCvar_t	cg_enableRandMovementType;
 
 typedef struct {
 	vmCvar_t	*vmCvar;
@@ -695,6 +696,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_enableRandJumpSound, "cg_enableRandJumpSound", "0", CVAR_ARCHIVE },
 	{ &cg_enableRandAllMissions, "cg_enableRandAllMissions", "0", CVAR_ARCHIVE },
 	{ &cg_enableRandMovementRestrictions, "cg_enableRandMovementRestrictions", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandMovementType, "cg_enableRandMovementType", "0", CVAR_ARCHIVE },
 	// Randomizer : information holder
 	{ &memorized_player_health, "memorized_player_health", "0", CVAR_ARCHIVE },
 };
