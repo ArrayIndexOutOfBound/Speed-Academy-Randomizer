@@ -1522,6 +1522,37 @@
 			} 
 		}
 
+		itemDef 
+		{	
+			name				random_movement_type
+			group				enhancements_evil
+      		type				ITEM_TYPE_MULTI
+			text				"Random Movement Type :"
+			cvar				"cg_enableRandMovementType"
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			rect				305 331 300 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			-2
+			font 				2
+			textscale 			0.8
+			forecolor			1 1 1 1
+			visible			0
+			descText			"Random chance to enable/disable gravity temporarily"
+			action
+			{
+				play			"sound/interface/button1.wav"
+			}
+			mouseenter 
+			{ 
+				show			highlight9
+			}
+			mouseexit 
+			{ 
+				hide			highlight9
+			} 
+		}
+
 
 		//----------------------------------------------------------------------------------------------
 		//

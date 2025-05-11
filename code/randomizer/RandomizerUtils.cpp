@@ -31,6 +31,8 @@ static std::map<class_t, team_t> teamsByClass;
 
 static int validWeapons[RandomizerUtils::NUM_VALID_WEAPONS];
 
+int RandomizerUtils::flyswimCheckTime = 0;
+
 static void AddCharArrayToInt(string seedString, int* value)
 {
 	for (int i = 0; i < seedString.size(); i++) {
