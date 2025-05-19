@@ -3532,6 +3532,12 @@ static void PM_CrashLandDamage( int damage )
 			damage = PM_DamageForDelta( damage );
 		}
 
+		//Let's not kill NPCs who're scripted to jump
+		if (cg_enableRandomizer.integer && pm->gent->NPC && pm->gent->NPC->behaviorState == BS_JUMP)
+		{
+			damage = 0;
+		}
+
 		if ( damage )
 		{
 			pm->gent->painDebounceTime = level.time + 200;	// no normal pain sound
