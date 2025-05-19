@@ -1354,6 +1354,9 @@ void NPC_BehaviorSet_Charmed( int bState )
 	case BS_FLEE:
 		NPC_BSFlee();
 		break;
+	case BS_RETREAT:
+		NPC_BSRetreat();
+		break;
 	default:
 	case BS_DEFAULT://whatever
 		NPC_BSDefault();
@@ -1396,6 +1399,9 @@ void NPC_BehaviorSet_Default( int bState )
 		break;
 	case BS_FLEE:
 		NPC_BSFlee();
+		break;
+	case BS_RETREAT:
+		NPC_BSRetreat();
 		break;
 	case BS_WAIT:
 		NPC_BSWait();

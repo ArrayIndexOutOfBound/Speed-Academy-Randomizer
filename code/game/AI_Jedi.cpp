@@ -74,6 +74,7 @@ extern qboolean G_ClearLineOfSight(const vec3_t point1, const vec3_t point2, int
 extern cvar_t	*g_saberRealisticCombat;
 extern cvar_t	*d_slowmodeath;
 extern cvar_t	*g_saberNewControlScheme;
+extern vmCvar_t	cg_enableRandomizer;
 extern int parryDebounce[];
 
 //Locals
@@ -7390,7 +7391,8 @@ qboolean Jedi_InSpecialMove( void )
 				NPC->client->leader = G_Find( NULL, FOFS(NPC_type), "rosh_dark" );
 			}
 			//NPC->client->ps.eFlags &= ~EF_POWERING_ROSH;
-			if ( NPC->client->leader )
+			//Safety check to not crash when there is no rosh
+			if ( NPC->client->leader && (!cg_enableRandomizer.integer && !NPC->client->leader->client))
 			{
 				qboolean helpingRosh = qfalse;
 				NPC->flags |= FL_LOCK_PLAYER_WEAPONS;

@@ -757,6 +757,7 @@ extern vmCvar_t	cg_enableRandSounds;
 extern vmCvar_t	cg_enableRandJumpSound;
 extern vmCvar_t	cg_enableRandMovementRestrictions;
 extern vmCvar_t	cg_enableRandMovementType;
+extern vmCvar_t	cg_safeCompanions;
 extern vmCvar_t	memorized_player_health;
 
 
