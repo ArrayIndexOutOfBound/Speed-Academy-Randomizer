@@ -4671,7 +4671,9 @@ void SP_NPC_Spawn_Random(gentity_t* self)
 		SP_NPC_RocketTrooper(self);
 		break;
 	case 30:
-		SP_NPC_HazardTrooper(self);
+		//These guys have their own squad logic that breaks a lot - no thank you
+		//SP_NPC_HazardTrooper(self);
+		SP_NPC_Spawn_Random(self);
 		break;
 	case 31:
 		SP_NPC_Ugnaught(self);
