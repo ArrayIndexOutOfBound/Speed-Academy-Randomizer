@@ -275,11 +275,10 @@ void initialiseWeaponsArray() {
 	validWeapons[9] = WP_ATST_MAIN;
 	validWeapons[10] = WP_ATST_SIDE;
 	validWeapons[11] = WP_BRYAR_PISTOL;
-	validWeapons[12] = WP_EMPLACED_GUN;
-	validWeapons[13] = WP_BOT_LASER;
-	validWeapons[14] = WP_TURRET;
-	validWeapons[15] = WP_TIE_FIGHTER;
-	validWeapons[16] = WP_RAPID_FIRE_CONC;
+	validWeapons[12] = WP_BOT_LASER;
+	validWeapons[13] = WP_TURRET;
+	validWeapons[14] = WP_TIE_FIGHTER;
+	validWeapons[15] = WP_RAPID_FIRE_CONC;
 }
 
 //Return a random valid weapon

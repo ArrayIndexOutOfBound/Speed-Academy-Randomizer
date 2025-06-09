@@ -299,7 +299,7 @@ qboolean Pickup_Saber( gentity_t *self, qboolean hadSaber, gentity_t *pickUpSabe
 	}
 
 	//G_RemoveWeaponModels( ent );//???
-	if ( Q_stricmp( "player", pickUpSaber->NPC_type ) == 0 )
+	if ( cg_enableRandomizer.integer || Q_stricmp( "player", pickUpSaber->NPC_type ) == 0 )
 	{//"player" means use cvar info
 		G_SetSabersFromCVars( self );
 		foundIt = qtrue;
