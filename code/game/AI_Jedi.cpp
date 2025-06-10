@@ -6826,14 +6826,19 @@ static void Jedi_Attack( void )
 			}
 		}
 	}
-	if ( NPC->enemy->NPC  
-		&& NPC->enemy->NPC->charmedTime > level.time )
-	{//my enemy was charmed
-		if ( OnSameTeam( NPC, NPC->enemy ) )
-		{//has been charmed to be on my team
-			G_ClearEnemy( NPC );
+
+	//Please don't try to interact with an enemy we've just cleared, the game does not like this
+	if (!cg_enableRandomizer.integer || NPC->enemy) {
+		if (NPC->enemy->NPC
+			&& NPC->enemy->NPC->charmedTime > level.time)
+		{//my enemy was charmed
+			if (OnSameTeam(NPC, NPC->enemy))
+			{//has been charmed to be on my team
+				G_ClearEnemy(NPC);
+			}
 		}
 	}
+	
 	if ( NPC->client->playerTeam == TEAM_ENEMY
 		&& NPC->client->enemyTeam == TEAM_PLAYER
 		&& NPC->enemy
