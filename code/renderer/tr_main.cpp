@@ -1359,20 +1359,20 @@ R_DecomposeSort
 void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
 					 int *fogNum, int *dlightMap ) {
 	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
-	if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
-		Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
-		Cvar_VariableIntegerValue("cg_enableRandTextures")) {
-		if (lastKownMap == "." || cl.mapname != lastKownMap) {
-			//Map has changed, re-init shader map
-			InitShaderMap();
-		}
-		//Pluck a randomized texture from the map
-		*shader = tr.sortedShaders[shaderMap[(sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]];
-	}
-	else {
+	//if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
+	//	Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
+	//	Cvar_VariableIntegerValue("cg_enableRandTextures")) {
+	//	if (lastKownMap == "." || cl.mapname != lastKownMap) {
+	//		//Map has changed, re-init shader map
+	//		InitShaderMap();
+	//	}
+	//	//Pluck a randomized texture from the map
+	//	*shader = tr.sortedShaders[shaderMap[(sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]];
+	//}
+	//else {
 		//Vanilla
 		*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
-	}
+	//}
 	*entityNum = ( sort >> QSORT_ENTITYNUM_SHIFT ) & (MAX_ENTITIES-1);
 	*dlightMap = sort & 3;
 }
