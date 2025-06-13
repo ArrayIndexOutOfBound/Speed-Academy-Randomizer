@@ -358,6 +358,7 @@ vmCvar_t	ui_hideXcallout;
 // Randomizer addition
 //extern vmCvar_t cg_enableRandomizer;
 #include <random>
+#include <chrono>
 //extern mt19937 rngRandoBase;
 //extern mt19937 rngRandoEnhancements;
 
@@ -5855,14 +5856,19 @@ static void	UI_AddWeaponSelection ( const int weaponIndex, const int ammoIndex, 
 			"13" "4" "400"	"concussion_icon"	"concussion_icon_lit"	"concussion_hex_background"   "sound/weapons/concussion/select.wav"
 			*/
 
+			// Exemple of system_clock::now() : 2025-06-13 11:20:53:6211835
+			// The result inside millis is 621 as an int64
+			INT64 millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() % 1000;
+
 			mt19937 rngRandoEnhancements;
-			rngRandoEnhancements.seed(std::time(nullptr));
+			//rngRandoEnhancements.seed(std::time(nullptr));
+			rngRandoEnhancements.seed(millis);
 
-			int numberOfExplosives = 8;
-			uniform_int_distribution<int> ExplosiveWPDist(0, numberOfExplosives - 1);
-			int rngExplosiveWP = ExplosiveWPDist(rngRandoEnhancements);
+			int numberOfRifles = 8;
+			uniform_int_distribution<int> RifleWPDist(0, numberOfRifles - 1);
+			int rngRifleWP = RifleWPDist(rngRandoEnhancements);
 
-			switch (rngExplosiveWP)
+			switch (rngRifleWP)
 			{
 			case 0:
 				UI_AddWeaponSelectionRandom(3, 2, 300, "brifle_icon", "brifle_icon_lit", "brifle_hex_background", "sound/weapons/blaster/select.wav");
@@ -6287,8 +6293,13 @@ static void	UI_AddThrowWeaponSelection ( const int weaponIndex, const int ammoIn
 			// "11" "8" "5" "tripmine_icon"	"tripmine_icon_lit" "tripmine_hex_background"  "sound/weapons/detpack/select.wav"
 			// "12" "9" "5"	"detpack_icon"	"detpack_icon_lit" "detpack_hex_background"  "sound/weapons/detpack/select.wav"
 
+			// Exemple of system_clock::now() : 2025-06-13 11:20:53:6211835
+			// The result inside millis is 621 as an int64
+			INT64 millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() % 1000;
+
 			mt19937 rngRandoEnhancements;
-			rngRandoEnhancements.seed(std::time(nullptr));
+			//rngRandoEnhancements.seed(std::time(nullptr));
+			rngRandoEnhancements.seed(millis);
 
 			int numberOfExplosives = 3;
 			uniform_int_distribution<int> ExplosiveWPDist(0, numberOfExplosives - 1);
