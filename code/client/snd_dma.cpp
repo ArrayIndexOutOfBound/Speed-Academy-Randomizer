@@ -1567,10 +1567,11 @@ void S_StartSound(const vec3_t origin, int entityNum, soundChannel_t entchannel,
 	sfx = &s_knownSfx[sfxHandle];
 	string sndName = sfx->sSoundName;
 
+	// Randomizer : this is called when a sound is done, how to optimize ?
 	if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
 		Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
 		(Cvar_VariableIntegerValue("cg_enableRandSounds") ||
-			Cvar_VariableIntegerValue("cg_enableRandJumpSound") && sndName.find("jump1") != std::string::npos))
+		Cvar_VariableIntegerValue("cg_enableRandJumpSound") && sndName.find("jump1") != std::string::npos))
 	{
 		sfx = GetRandomValidSfx(sfxHandle);
 	}

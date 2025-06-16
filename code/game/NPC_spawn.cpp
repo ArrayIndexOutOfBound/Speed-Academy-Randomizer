@@ -483,6 +483,10 @@ void Randomizer_SetupNPCByClass(gentity_t* ent)
 
 void Randomizer_SetTeamInfo(gentity_t* ent)
 {
+	//Don't touch tauntauns
+	if (!Q_stricmp(ent->NPC_type, "wildtauntaun")) {
+		return;
+	}
 	switch (ent->client->playerTeam) {
 	case TEAM_PLAYER:
 		ent->client->enemyTeam = TEAM_ENEMY;

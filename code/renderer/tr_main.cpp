@@ -1351,6 +1351,9 @@ void InitShaderMap() {
 	}
 }
 
+
+// Randomizer : take from a random shader
+bool takeFromRandomShader = false;
 /*
 =================
 R_DecomposeSort
@@ -1359,13 +1362,8 @@ R_DecomposeSort
 void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
 					 int *fogNum, int *dlightMap ) {
 	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
-	if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
-		Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
-		Cvar_VariableIntegerValue("cg_enableRandTextures")) {
-		if (lastKownMap == "." || cl.mapname != lastKownMap) {
-			//Map has changed, re-init shader map
-			InitShaderMap();
-		}
+	if (takeFromRandomShader)
+	{
 		//Pluck a randomized texture from the map
 		*shader = tr.sortedShaders[shaderMap[(sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]];
 	}
@@ -1409,6 +1407,20 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// sort the drawsurfs by sort type, then orientation, then shader
 	qsortFast (drawSurfs, numDrawSurfs, sizeof(drawSurf_t) );
 #endif
+
+	// Randomizer stuff : we determine once per frame instead per frame per surface
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
+		Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
+		Cvar_VariableIntegerValue("cg_enableRandTextures"))
+	{
+		if (lastKownMap == "." || cl.mapname != lastKownMap)
+		{
+			//Map has changed, re-init shader map
+			InitShaderMap();
+		}
+		takeFromRandomShader = true;
+	}
+	else takeFromRandomShader = false;
 
 	// check for any pass through drawing, which
 	// may cause another view to be rendered first
