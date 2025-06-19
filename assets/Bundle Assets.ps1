@@ -4,7 +4,7 @@
 }
 
 $compress = @{
-  Path = "ui", "models"
+  Path = "ui", "models", "ext_data", "gfx"
   CompressionLevel = "Fastest"
   DestinationPath = "assets_speedacademy_randomizer.zip"
 }
