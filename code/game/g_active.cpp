@@ -621,8 +621,8 @@ void P_WorldEffects( gentity_t *ent ) {
 		{
 			if (strcmp(level.mapname, "vjun1") == 0)
 			{
-				// We do it once, no need to spam every frame
-				if (ent->targetname && (strcmp(ent->targetname, "kyle") == 0) && ent->client->ps.forcePowerLevel[FP_PROTECT] == 0)
+				// We do it once, no need to spam every frame. Edit 29-06-2025 : check a number before string
+				if (ent->targetname && ent->client->ps.forcePowerLevel[FP_PROTECT] == 0 && (strcmp(ent->targetname, "kyle") == 0) )
 				{
 					ent->client->ps.forcePowersKnown |= (1 << FP_PROTECT);
 					ent->client->ps.forcePowerLevel[FP_PROTECT] = FORCE_LEVEL_3;

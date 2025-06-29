@@ -4903,7 +4903,15 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 				{
 					if ( gi.G2API_GetSurfaceRenderStatus( &ent->ghoul2[ent->playerModel], "head_light_blaster_cann" ) )
 					{//don't have it!
-						return;
+						if (cg_enableRandomizer.integer)
+						{
+							 // Nothing, still shoot please
+						}
+						else
+						{
+							// Vanila
+							return;
+						}
 					}
 					bolt = ent->genericBolt2;
 				}
@@ -4911,7 +4919,15 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 				{
 					if ( gi.G2API_GetSurfaceRenderStatus( &ent->ghoul2[ent->playerModel], "head_concussion_charger" ) )
 					{//don't have it!
-						return;
+						if (cg_enableRandomizer.integer)
+						{
+							// Nothing, still shoot please
+						}
+						else
+						{
+							// Vanila
+							return;
+						}
 					}
 					bolt = ent->genericBolt1;
 				}

@@ -9148,6 +9148,43 @@ static void PM_BeginWeaponChange( int weapon ) {
 		pm->ps->SaberDeactivate();
 		pm->ps->SetSaberLength( 0.0f );
 	}
+	// Posto / Randomizer addition
+	if (cg_enableRandomizer.integer)
+	{
+		extern void CG_ChangeWeapon(int weaponnum);
+		if (weapon == WP_ATST_MAIN)
+		{
+			gitem_t* item = FindItemForWeapon(WP_ATST_MAIN);	//precache the weapon
+			CG_RegisterWeapon(WP_ATST_MAIN);
+			//CG_RegisterItemSounds(WP_ATST_MAIN);
+			//CG_RegisterItemVisuals(WP_ATST_MAIN);
+			CG_RegisterItemSounds((item - bg_itemlist));
+			CG_RegisterItemVisuals((item - bg_itemlist));
+			pm->gent->client->ps.stats[STAT_WEAPONS] |= (1 << WP_ATST_MAIN) | (1 << WP_ATST_SIDE);
+			CG_ChangeWeapon(WP_ATST_MAIN);
+			//CG_Weapon_f((void)WP_ATST_MAIN);
+		}
+		else if (weapon == WP_ATST_SIDE)
+		{
+			gitem_t* item = FindItemForWeapon(WP_ATST_SIDE);	//precache the weapon
+			CG_RegisterWeapon(WP_ATST_SIDE);
+			//CG_RegisterItemSounds(WP_ATST_SIDE);
+			//CG_RegisterItemVisuals(WP_ATST_SIDE);
+			CG_RegisterItemSounds((item - bg_itemlist));
+			CG_RegisterItemVisuals((item - bg_itemlist));
+			pm->gent->client->ps.stats[STAT_WEAPONS] |= (1 << WP_ATST_MAIN) | (1 << WP_ATST_SIDE);
+			CG_ChangeWeapon(WP_ATST_SIDE);
+			//CG_Weapon_f((void)WP_ATST_SIDE);
+		}
+		else if (weapon == WP_NOGHRI_STICK)
+		{
+			gitem_t* item = FindItemForWeapon(WP_NOGHRI_STICK);	//precache the weapon
+			CG_RegisterWeapon(WP_NOGHRI_STICK);
+			CG_RegisterItemSounds((item - bg_itemlist));
+			CG_RegisterItemVisuals((item - bg_itemlist));
+			pm->gent->client->ps.stats[STAT_WEAPONS] |= (1 << WP_NOGHRI_STICK);
+		}
+	}
 }
 
 
