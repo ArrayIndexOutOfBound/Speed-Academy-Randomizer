@@ -3319,6 +3319,31 @@ static float CG_DrawFormattedMilliseconds( int milliseconds, int accuracy, float
 	return y + BIGCHAR_HEIGHT + 10;
 }
 
+static string GetRestrictionStringRandomizer() {
+	extern cvar_t *g_randomizerEnableVrgi;
+	extern cvar_t *g_randomizerEnableSpinGlitch;
+	extern cvar_t *g_randomizerEnableCrouchBoost;
+	extern cvar_t *g_randomizerEnableReverseBoost;
+
+	std::string restriction_string = "--";
+	if (!g_randomizerEnableVrgi->integer) {
+		restriction_string = "NV";
+	}
+	else if (g_randomizerEnableReverseBoost->integer) {
+		restriction_string = "RB";
+	}
+	else if (!g_randomizerEnableSpinGlitch->integer && !g_randomizerEnableCrouchBoost->integer) {
+		restriction_string = "EB";
+	}
+	else if (!g_randomizerEnableSpinGlitch->integer) {
+		restriction_string = "CB";
+	}
+	else if (!g_randomizerEnableCrouchBoost->integer) {
+		restriction_string = "SG";
+	}
+	return restriction_string;
+}
+
 /*
 ===========================
 CG_DrawMovementRestriction
@@ -3331,18 +3356,27 @@ static float CG_DrawMovementRestriction(float y) {
 	extern cvar_t *g_reverseBoosts;
 
 	std::string restriction_string = "--";
-	if ( !g_vrgi->integer ) {
-		restriction_string = "NV";
-	} else if ( g_reverseBoosts->integer ) {
-		restriction_string = "RB";
-	} else if ( !g_spinGlitch->integer && !g_crouchBoosts->integer ) {
-		restriction_string = "EB";
-	} else if ( !g_spinGlitch->integer ) {
-		restriction_string = "CB";
-	} else if ( !g_crouchBoosts->integer ) {
-		restriction_string = "SG";
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandMovementRestrictions.integer) {
+		restriction_string = GetRestrictionStringRandomizer();
 	}
-
+	else {
+		if (!g_vrgi->integer) {
+			restriction_string = "NV";
+		}
+		else if (g_reverseBoosts->integer) {
+			restriction_string = "RB";
+		}
+		else if (!g_spinGlitch->integer && !g_crouchBoosts->integer) {
+			restriction_string = "EB";
+		}
+		else if (!g_spinGlitch->integer) {
+			restriction_string = "CB";
+		}
+		else if (!g_crouchBoosts->integer) {
+			restriction_string = "SG";
+		}
+	}
+	
 	int const width = cgi_R_Font_StrLenPixels(restriction_string.c_str(), cgs.media.qhFontMedium, 1.0f);
 	cgi_R_Font_DrawString(635 - width, y + 2, restriction_string.c_str(), colorTable[CT_LTGOLD1], cgs.media.qhFontMedium, -1, 1.0f);
 
@@ -3777,6 +3811,38 @@ static void CG_Draw2DScreenTints( void )
 		CG_FillRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, hcolor  );
 	}
 }
+
+// Randomizer addition
+/*
++===============
++CG_DrawSeed
++===============
++*/
+static float CG_DrawSeed(float y) {
+	if (cg_enableRandomizer.integer)
+	{
+		char* seed_string;
+		if (cg_enableRandomizerEnhancements.integer)
+		{
+			seed_string = va("Seed (X): %s", cg_setSeed.string);
+		}
+		else
+		{
+			seed_string = va("Seed : %s", cg_setSeed.string);
+		}
+		const int width = cgi_R_Font_StrLenPixels(seed_string, cgs.media.qhFontMedium, 1.0f);
+		cgi_R_Font_DrawString(635 - width, y + 2, seed_string, colorTable[CT_LTGOLD1], cgs.media.qhFontMedium, -1, 1.0f);
+		return y + BIGCHAR_HEIGHT + 10;
+	}
+	else
+	{
+		const char* seed_string = va("No Rand");
+		const int width = cgi_R_Font_StrLenPixels(seed_string, cgs.media.qhFontMedium, 1.0f);
+		cgi_R_Font_DrawString(635 - width, y + 2, seed_string, colorTable[CT_DKORANGE], cgs.media.qhFontMedium, -1, 1.0f);
+		return y + BIGCHAR_HEIGHT + 10;
+	}
+}
+
 
 /*
 +======================
@@ -4254,6 +4320,12 @@ static void CG_Draw2D( void )
 	if ( cg_drawOverbounceInfo.integer )
 	{
 		CG_DrawOverbounceInfo();
+	}
+
+	// Randomizer addition
+	if (cg_drawSeed.integer)
+	{
+		CG_DrawSeed(y);
 	}
 
 /*	if (cg.showInformation)

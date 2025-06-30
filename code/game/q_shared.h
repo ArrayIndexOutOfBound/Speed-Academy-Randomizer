@@ -1448,7 +1448,8 @@ typedef struct {
 #define	MAX_CLIENTS			1 // 128		// absolute limit
 #define MAX_TERRAINS		1 //32
 
-#define	GENTITYNUM_BITS		10		// don't need to send any more
+//#define	GENTITYNUM_BITS		10		// old value
+#define	GENTITYNUM_BITS		12		// increased for the randomizer
 #define	MAX_GENTITIES		(1<<GENTITYNUM_BITS)
 
 // entitynums are communicated with GENTITY_BITS, so any reserved
@@ -1459,8 +1460,10 @@ typedef struct {
 #define	ENTITYNUM_MAX_NORMAL	(MAX_GENTITIES-2)
 
 
-#define	MAX_MODELS			256
-#define	MAX_SOUNDS			380
+//#define	MAX_MODELS			256
+//#define	MAX_SOUNDS			380
+#define	MAX_MODELS			512		// Posto : For the Randomizer, we might need to increase it.
+#define	MAX_SOUNDS			512		// Same for that
 
 #define MAX_SUB_BSP			32
 
@@ -1469,7 +1472,8 @@ typedef struct {
 #endif // _IMMERSION
 #define	MAX_SUBMODELS		512		// nine bits
 
-#define MAX_FX				128
+//#define MAX_FX				128
+#define MAX_FX				256		//More FX Space
 #define MAX_WORLD_FX		66		// was 16 // was 4
 
 /*
@@ -1480,7 +1484,8 @@ Ghoul2 Insert Start
 Ghoul2 Insert End
 */
 
-#define	MAX_CONFIGSTRINGS	1300//1024 //rww - I had to up this for terrains
+//#define	MAX_CONFIGSTRINGS	1300//1024 //rww - I had to up this for terrains
+#define	MAX_CONFIGSTRINGS	2048 // Randomizer
 
 // these are the only configstrings that the system reserves, all the
 // other ones are strictly for servergame to clientgame communication
@@ -1529,7 +1534,8 @@ Ghoul2 Insert End
 #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS
 #endif
 
-#define	MAX_GAMESTATE_CHARS	16000
+//#define	MAX_GAMESTATE_CHARS	16000
+#define	MAX_GAMESTATE_CHARS	32000
 typedef struct {
 	int			stringOffsets[MAX_CONFIGSTRINGS];
 	char		stringData[MAX_GAMESTATE_CHARS];

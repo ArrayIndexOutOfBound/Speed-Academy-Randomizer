@@ -4790,6 +4790,23 @@ static void Q3_SetCinematicSkipScript( char *scriptname )
 		if (strcmp(scriptname, "kor2/endgame_ds_3_skip") == 0 ||
 		    strcmp(scriptname, "kor2/endgame_ls_4_skip") == 0)
 		{
+			// Randomizer addition
+			if (cg_enableRandomizer.integer)
+			{
+				if (cg_enableRandomizerEnhancements.integer) // Another proof of the use of 'enhancements'
+				{
+					gi.Printf(S_COLOR_RED "=========================\n");
+					Com_Printf(S_COLOR_GREEN "Seed used (X): " S_COLOR_WHITE "%s\n", cg_setSeed.string);
+					gi.Printf(S_COLOR_RED "=========================\n");
+				}
+				else
+				{
+					gi.Printf(S_COLOR_RED "=========================\n");
+					Com_Printf(S_COLOR_GREEN "Seed used: " S_COLOR_WHITE "%s\n", cg_setSeed.string);
+					gi.Printf(S_COLOR_RED "=========================\n");
+				}
+			}
+
 			// Hack for stopping the timer on end of game
 			cgi_SpeedrunRunFinished();
 		}
@@ -8273,6 +8290,13 @@ void	CQuake3GameInterface::Set( int taskID, int entID, const char *type_name, co
 			else
 			{
 				DebugPrint( WL_ERROR, "SetAnimLower: %s does not have anim %s!\n", ent->targetname, (char *)data );
+			}
+			if (both == 0 && cg_enableRandomizer.integer) {
+				int instantTimer = 40;
+				Q3_TaskIDSet(ent, TID_ANIM_BOTH, taskID);
+				PM_SetTorsoAnimTimer(ent, &instantTimer, 0);
+				PM_SetLegsAnimTimer(ent, &instantTimer, 0);
+				return;
 			}
 			if ( both >= 2 )
 			{

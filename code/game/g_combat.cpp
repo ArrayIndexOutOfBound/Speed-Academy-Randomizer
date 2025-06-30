@@ -2052,7 +2052,13 @@ static qboolean G_Dismember( gentity_t *ent, vec3_t point,
 		newBolt = gi.G2API_AddBolt( &limb->ghoul2[limb->playerModel], limbTagName );
 		if ( newBolt != -1 )
 		{
-			G_PlayEffect( G_EffectIndex("saber/limb_bolton"), limb->playerModel, newBolt, limb->s.number, newPoint);
+			//limb_bolton doesn't exist so use smoke_bolton like JKO
+			if (cg_enableRandomizer.integer) {
+				G_PlayEffect(G_EffectIndex("blaster/smoke_bolton"), limb->playerModel, newBolt, limb->s.number, newPoint);
+			}
+			else {
+				G_PlayEffect(G_EffectIndex("saber/limb_bolton"), limb->playerModel, newBolt, limb->s.number, newPoint);
+			}
 		}
 	}
 	/*
@@ -3657,6 +3663,8 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	qboolean	specialAnim = qfalse;
 	qboolean	holdingSaber = qfalse;
 	int			cliff_fall = 0;
+
+	// Posto / Randomizer : you can catch here the reason why an NPC died
 
 	//FIXME: somehow people are sometimes not completely dying???
 	if ( self->client->ps.pm_type == PM_DEAD && (meansOfDeath != MOD_SNIPER || (self->flags & FL_DISINTEGRATED)) )

@@ -13,6 +13,17 @@
 #include "wp_saber.h"
 #include "g_vehicles.h"
 
+// Randomizer addition
+#include "..\randomizer\RandomizerUtils.h"
+extern	vmCvar_t		cg_enableRandomizer;
+extern	vmCvar_t		cg_enableRandomizerEnhancements;
+extern	vmCvar_t		cg_useSetSeed;
+extern	vmCvar_t		cg_setSeed;
+extern  mt19937			rngRandoBase;
+extern	mt19937			rngRandoEnhancements;
+extern  vmCvar_t		cg_enableRandNPCSpeed;
+extern	vmCvar_t		cg_enableRandNpcHealth;
+
 extern qboolean G_CheckInSolid (gentity_t *self, qboolean fix);
 extern void ClientUserinfoChanged( int clientNum );
 extern qboolean SpotWouldTelefrag2( gentity_t *mover, vec3_t dest );
@@ -228,8 +239,478 @@ void G_ClassSetDontFlee( gentity_t *self )
 extern void	Vehicle_Register(gentity_t *ent);
 extern void RT_FlyStart( gentity_t *self );
 extern void SandCreature_ClearTimers( gentity_t *ent );
-void NPC_SetMiscDefaultData( gentity_t *ent )
+
+void Randomizer_SetupSaberNPCs(gentity_t* ent)
 {
+	//Special Case for saber droid
+	if (ent->client->NPC_class == CLASS_SABER_DROID) {
+		ent->flags |= FL_NO_KNOCKBACK;
+	}
+
+	//Setup ambushers except yavin2 saber droid - things get weird
+	if (ent->spawnflags & JSF_AMBUSH &&
+		(!Q_stricmp("yavin2", "level.mapname") && !Q_stricmp(ent->targetname, "npc_saberDroid"))) {
+		ent->NPC->scriptFlags |= SCF_IGNORE_ALERTS;
+		ent->client->noclip = qtrue;//hang
+	}
+
+	ent->client->ps.SaberDeactivate();
+	ent->client->ps.SetSaberLength(0);
+	WP_SaberInitBladeData(ent);
+	WP_SaberAddG2SaberModels(ent);
+	WP_InitForcePowers(ent);
+	Jedi_ClearTimers(ent);
+}
+
+void Randomizer_SetupEnemies(gentity_t* ent)
+{
+	ent->NPC->defaultBehavior = BS_DEFAULT;
+	if (ent->client->NPC_class == CLASS_SHADOWTROOPER)
+	{//FIXME: a spawnflag?
+		Jedi_Cloak(ent);
+	}
+
+	if (ent->client->ps.weapon != WP_NONE
+		&& ent->client->ps.weapon != WP_SABER//sabers done above
+		&& (!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))//they do this themselves
+	{
+		G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handRBolt, 0);
+	}
+
+	//G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl);
+	switch (ent->client->ps.weapon)
+	{
+		//Nothing to do with these
+		case WP_DISRUPTOR:
+		case WP_DEMP2:
+		case WP_ROCKET_LAUNCHER:
+		case WP_CONCUSSION:
+		case WP_THERMAL:
+		case WP_MELEE:
+		case WP_NOGHRI_STICK:
+		case WP_BRYAR_PISTOL:
+			break;
+		//These set the pilot flag for some reason
+		case WP_BOWCASTER:
+		case WP_REPEATER:
+		case WP_FLECHETTE:
+			NPCInfo->scriptFlags |= SCF_PILOT;
+			break;
+		case WP_BLASTER_PISTOL:
+			NPCInfo->scriptFlags |= SCF_PILOT;
+			if (ent->client->NPC_class == CLASS_REBORN &&
+				ent->NPC->rank >= RANK_LT_COMM &&
+				(!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))//they do this themselves
+			{
+				//dual blaster pistols, so add the left-hand one, too
+				G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handLBolt, 1);
+			}
+			break;
+		//Prob a stormtrooper or similar, do stormtrooper setup
+		case WP_BLASTER:
+		default:
+			ST_ClearTimers(ent);
+			if (ent->NPC->rank >= RANK_COMMANDER)
+			{//commanders use alt-fire
+				ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+			}
+			if (!Q_stricmp("rodian2", ent->NPC_type))
+			{
+				ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+			}
+			break;
+	}
+}
+
+void Randomizer_SetupNPCByClass(gentity_t* ent)
+{
+	//***I'm not sure whether I should leave this as a TEAM_ switch, I think NPC_class may be more appropriate - dmv
+	//Amber - whoever dmv is they're right, this should be based on class
+	// Posto : sup'
+	switch (ent->client->NPC_class) {
+	case CLASS_SEEKER:
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		ent->NPC->stats.move = MT_FLYSWIM;
+		ent->count = 30; // SEEKER shot ammo count
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		ent->client->moveType = MT_FLYSWIM;
+		ent->count = 30; // SEEKER shot ammo count
+		return;
+	case CLASS_PROBE:
+	case CLASS_REMOTE:
+	case CLASS_INTERROGATOR:
+	case CLASS_SENTRY:
+		ent->NPC->defaultBehavior = BS_DEFAULT;
+		ent->client->ps.gravity = 0;
+		ent->svFlags |= SVF_CUSTOM_GRAVITY;
+		ent->NPC->stats.move = MT_FLYSWIM;
+		break;
+	case CLASS_JEDI:
+	case CLASS_LUKE:
+	case CLASS_TAVION:
+	case CLASS_REBORN:
+	case CLASS_DESANN:
+	case CLASS_SHADOWTROOPER:
+	case CLASS_SABER_DROID:
+		//All saber wielders
+		Randomizer_SetupSaberNPCs(ent);
+		break;
+	case CLASS_GONK:
+		// I guess we generically make them player usable
+		ent->svFlags |= SVF_PLAYER_USABLE;
+
+		// Not even sure if we want to give different levels of batteries?  ...Or even that these are the values we'd want to use.
+		switch (g_spskill->integer)
+		{
+			case 0:	//	EASY
+				ent->client->ps.batteryCharge = MAX_BATTERIES * 0.8f;
+				break;
+			case 1:	//	MEDIUM
+				ent->client->ps.batteryCharge = MAX_BATTERIES * 0.75f;
+				break;
+			default:
+			case 2:	//	HARD
+				ent->client->ps.batteryCharge = MAX_BATTERIES * 0.5f;
+				break;
+		}
+		break;
+	case CLASS_R2D2: // No weapons for astromech droids please
+	case CLASS_R5D2:
+		break;
+	case CLASS_RANCOR:
+		if (Q_stricmp("mutant_rancor", ent->NPC_type) == 0)
+		{
+			ent->spawnflags |= 1;//just so I know it's a mutant rancor as opposed to a normal one
+			ent->NPC->aiFlags |= NPCAI_NAV_THROUGH_BREAKABLES;
+			ent->mass = 2000;
+		}
+		else
+		{
+			ent->NPC->aiFlags |= NPCAI_NAV_THROUGH_BREAKABLES;
+			ent->mass = 1000;
+		}
+		ent->flags |= FL_NO_KNOCKBACK;
+		break;
+	case CLASS_SAND_CREATURE:
+		ent->clipmask = CONTENTS_SOLID | CONTENTS_MONSTERCLIP;//it can go through others
+		ent->contents = 0;//can't be hit?
+		ent->takedamage = qfalse;//can't be killed
+		ent->flags |= FL_NO_KNOCKBACK;
+		SandCreature_ClearTimers(ent);
+		break;
+	case CLASS_BOBAFETT:
+		ent->client->ps.forcePowersKnown |= (1 << FP_LEVITATION);
+		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
+		ent->client->ps.forcePower = 100;
+		ent->NPC->scriptFlags |= (SCF_NAV_CAN_FLY | SCF_FLY_WITH_JET | SCF_NAV_CAN_JUMP);
+		NPC->flags |= FL_UNDYING;		// Can't Kill Boba
+		break;
+	case CLASS_ROCKETTROOPER:
+		ent->client->ps.forcePowersKnown |= (1 << FP_LEVITATION);
+		ent->client->ps.forcePowerLevel[FP_LEVITATION] = FORCE_LEVEL_3;
+		ent->client->ps.forcePower = 100;
+		ent->NPC->scriptFlags |= (SCF_NAV_CAN_FLY | SCF_FLY_WITH_JET | SCF_NAV_CAN_JUMP);//no groups, no combat points!
+		if (Q_stricmp("rockettrooper2Officer", ent->NPC_type) == 0)
+		{//start in the air, use spotlight
+			//ent->NPC->scriptFlags |= SCF_NO_GROUPS;
+			ent->NPC->scriptFlags &= ~SCF_FLY_WITH_JET;
+			RT_FlyStart(ent);
+			NPC_SetMoveGoal(ent, ent->currentOrigin, 16, qfalse, -1, NULL);
+			VectorCopy(ent->currentOrigin, ent->pos1);
+		}
+		if ((ent->spawnflags & 2))
+		{//spotlight
+			ent->client->ps.eFlags |= EF_SPOTLIGHT;
+		}
+		break;
+	case CLASS_ASSASSIN_DROID:
+		ent->client->ps.stats[STAT_ARMOR] = 250;	// start with full armor
+		if (ent->s.weapon == WP_BLASTER)
+		{
+			ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+		}
+		ent->flags |= (FL_NO_KNOCKBACK);
+		break;
+	case CLASS_SABOTEUR:
+		ent->NPC->aiFlags |= NPCAI_SHIELDS;//give them the ability to cloak
+		if ((ent->spawnflags & 16))
+		{//start cloaked
+			Saboteur_Cloak(ent);
+		}
+		break;
+	case CLASS_HOWLER:
+		Howler_ClearTimers(ent);
+		ent->NPC->scriptFlags |= SCF_NO_FALLTODEATH;
+		ent->flags |= FL_NO_IMPACT_DMG;
+		ent->NPC->scriptFlags |= SCF_NAV_CAN_JUMP;	// These jokers can jump
+		break;
+	default:
+		if (RandomizerUtils::GetClassTeamByClass(ent->client->NPC_class) == TEAM_PLAYER) //Any other NPCs which would normally be friendsly
+		{
+			if (ent->client->ps.weapon == WP_BLASTER || ent->client->ps.weapon == WP_THERMAL) {
+				//All blaster enemies full auto at the player
+				ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+			}
+		}
+		else if (RandomizerUtils::GetClassTeamByClass(ent->client->NPC_class) == TEAM_ENEMY) { //Any other NPCs which would normally be enemies
+			{
+				Randomizer_SetupEnemies(ent);
+			}
+		}
+
+		//Extra stuff for cinematic chars and behaviour set for friendly NPCS
+		if (ent->client->NPC_class == CLASS_KYLE || (ent->spawnflags & SFB_CINEMATIC))
+		{
+			ent->NPC->defaultBehavior = BS_CINEMATIC;
+		}
+		else if (ent->client->playerTeam == TEAM_PLAYER)
+		{
+			ent->NPC->defaultBehavior = BS_FOLLOW_LEADER;
+			ent->client->leader = &g_entities[0];
+		}
+
+		//Shields for ATSTs/Mark1s
+		if (ent->client->NPC_class == CLASS_ATST || ent->client->NPC_class == CLASS_MARK1) // chris/steve/kevin requested that the mark1 be shielded also
+		{
+			ent->flags |= (FL_SHIELDED | FL_NO_KNOCKBACK);
+		}
+	}
+}
+
+void Randomizer_SetTeamInfo(gentity_t* ent)
+{
+	//Don't touch tauntauns
+	if (!Q_stricmp(ent->NPC_type, "wildtauntaun")) {
+		return;
+	}
+	switch (ent->client->playerTeam) {
+	case TEAM_PLAYER:
+		ent->client->enemyTeam = TEAM_ENEMY;
+		ent->client->clientInfo.team = TEAM_PLAYER;
+		ent->client->sess.sessionTeam = TEAM_PLAYER;
+		break;
+	case TEAM_ENEMY:
+	case TEAM_FREE:
+		ent->client->enemyTeam = TEAM_PLAYER;
+		break;
+	}
+
+	//If enemy is TEAM_NEUTRAL we'll never aggro so default to targeting player
+	if (ent->client->enemyTeam == TEAM_NEUTRAL) {
+		ent->client->enemyTeam = TEAM_PLAYER;
+	}
+}
+
+//Handle spawn flags and a few type specific setup things
+void Randomizer_InitialSetupNPC(gentity_t* ent)
+{
+	//if a cinematic guy, default us to wait bState
+	if (ent->spawnflags & SFB_CINEMATIC) {
+		ent->NPC->behaviorState = BS_CINEMATIC;
+	}
+
+	if (ent->spawnflags & 4096) {
+		ent->NPC->scriptFlags |= SCF_NO_GROUPS;//don't use combat points or group AI
+	}
+
+	if (Q_stricmp("DKothos", ent->NPC_type) == 0
+		|| Q_stricmp("VKothos", ent->NPC_type) == 0)
+	{
+		ent->NPC->scriptFlags |= SCF_DONT_FIRE;
+		ent->NPC->aiFlags |= NPCAI_HEAL_ROSH;
+		ent->count = 100;
+	}
+	else if (Q_stricmp("rosh_dark", ent->NPC_type) == 0)
+	{
+		ent->NPC->aiFlags |= NPCAI_ROSH;
+	}
+
+	if (Q_stricmpn(ent->NPC_type, "hazardtrooper", 13) == 0)
+	{//hazard trooper
+		ent->NPC->scriptFlags |= SCF_NO_GROUPS;//don't use combat points or group AI
+		ent->flags |= (FL_SHIELDED | FL_NO_KNOCKBACK);//low-level shots bounce off, no knockback
+	}
+	if (!Q_stricmp("Yoda", ent->NPC_type))
+	{//FIXME: extern this into NPC.cfg?
+		ent->NPC->scriptFlags |= SCF_NO_FORCE;//force powers don't work on him
+		ent->NPC->aiFlags |= NPCAI_BOSS_CHARACTER;
+	}
+	if (!Q_stricmp("emperor", ent->NPC_type)
+		|| !Q_stricmp("cultist_grip", ent->NPC_type)
+		|| !Q_stricmp("cultist_drain", ent->NPC_type)
+		|| !Q_stricmp("cultist_lightning", ent->NPC_type))
+	{//FIXME: extern this into NPC.cfg?
+		ent->NPC->scriptFlags |= SCF_DONT_FIRE;//so he uses only force powers
+	}
+	if (!Q_stricmp("Rax", ent->NPC_type))
+	{
+		ent->NPC->scriptFlags |= SCF_DONT_FLEE;
+	}
+	if (Q_stricmp("chewie", ent->NPC_type))
+	{
+		//in case chewie ever loses his gun...
+		ent->NPC->aiFlags |= NPCAI_HEAVY_MELEE;
+	}
+	if (!Q_stricmp("cultist_destroyer", ent->NPC_type))
+	{
+		ent->splashDamage = 1000;
+		ent->splashRadius = 384;
+		//FIXME: precache these!
+		ent->fxID = G_EffectIndex("force/destruction_exp");
+		ent->NPC->scriptFlags |= (SCF_DONT_FLEE | SCF_IGNORE_ALERTS);
+		ent->NPC->ignorePain = qtrue;
+	}
+
+	if (ent->client->NPC_class == CLASS_TUSKEN)
+	{
+		if (g_spskill->integer > 1)
+		{//on hard, tusken raiders are faster than you
+			ent->NPC->stats.runSpeed = 280;
+			ent->NPC->stats.walkSpeed = 65;
+		}
+	}
+}
+
+//Initialise Sabers
+void Randomizer_SetupSaber(gentity_t* ent) {
+	if (ent->client->ps.saber[0].type != SABER_NONE
+		&& (!(ent->NPC->aiFlags & NPCAI_MATCHPLAYERWEAPON) || !ent->weaponModel[0]))
+	{//if I'm equipped with a saber, initialize it (them)
+		ent->client->ps.SaberDeactivate();
+		ent->client->ps.SetSaberLength(0);
+		WP_SaberInitBladeData(ent);
+		if (ent->client->ps.weapon == WP_SABER)
+		{//this is our current weapon, add the models now
+			WP_SaberAddG2SaberModels(ent);
+		}
+		Jedi_ClearTimers(ent);
+	}
+}
+
+//Initialise force powers
+void Randomizer_SetupForcePowers(gentity_t* ent)
+{
+	if (ent->client->ps.forcePowersKnown != 0)
+	{
+		WP_InitForcePowers(ent);
+		if (ent->client->ps.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_0)
+		{
+			ent->NPC->scriptFlags |= SCF_NAV_CAN_JUMP;	// anyone who has any force jump can jump
+		}
+	}
+}
+
+void Randomizer_SetBossInfo(gentity_t* ent)
+{
+	if (ent->client->NPC_class == CLASS_DESANN
+		|| ent->client->NPC_class == CLASS_TAVION
+		|| ent->client->NPC_class == CLASS_LUKE
+		|| ent->client->NPC_class == CLASS_KYLE
+		|| Q_stricmp("tavion_scepter", ent->NPC_type) == 0
+		|| Q_stricmp("alora_dual", ent->NPC_type) == 0)
+	{
+		ent->NPC->aiFlags |= NPCAI_BOSS_CHARACTER;
+	}
+	else if (Q_stricmp("alora", ent->NPC_type) == 0
+		|| Q_stricmp("rosh_dark", ent->NPC_type) == 0)
+	{
+		ent->NPC->aiFlags |= NPCAI_SUBBOSS_CHARACTER;
+	}
+}
+
+//Setup Scepter, Sith sword, Noghri stick
+void Randomizer_SetupSpecialWeapons(gentity_t* ent)
+{
+	//Scepter setup
+	if (ent->client->ps.stats[STAT_WEAPONS] & (1 << WP_SCEPTER))
+	{
+		if (!ent->weaponModel[1])
+		{//we have the scepter, so put it in our left hand if we don't already have a second weapon
+			G_CreateG2AttachedWeaponModel(ent, weaponData[WP_SCEPTER].weaponMdl, ent->handLBolt, 1);
+		}
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[1]], "*flash");
+	}
+
+	//Sith sword setup
+	if (ent->client->ps.saber[0].type == SABER_SITH_SWORD)
+	{
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[0]], "*flash");
+		G_PlayEffect(G_EffectIndex("scepter/sword.efx"), ent->weaponModel[0], ent->genericBolt1, ent->s.number, ent->currentOrigin, qtrue, qtrue);
+		//how many times can she recharge?
+		ent->count = g_spskill->integer * 2;
+		//To make sure she can do it at least once
+		ent->flags |= FL_UNDYING;
+	}
+
+	//Noghri Stick setup
+	if (ent->client->ps.weapon == WP_NOGHRI_STICK
+		&& ent->weaponModel[0])
+	{
+		ent->genericBolt1 = gi.G2API_AddBolt(&ent->ghoul2[ent->weaponModel[0]], "*flash");
+	}
+}
+
+void Randomizer_SetupWeaponModel(gentity_t* ent) {
+	//If we have a weapon and we don't have a weapon model
+	if (ent->client->ps.weapon &&
+		ent->client->ps.weapon != WP_NONE &&
+		ent->client->ps.weapon != WP_MELEE &&
+		(!ent->weaponModel[0] || ent->weaponModel[0] == -1)) { //of course -1 is truthy why wouldn't it be?
+		//Create one
+		G_CreateG2AttachedWeaponModel(ent, weaponData[ent->client->ps.weapon].weaponMdl, ent->handRBolt, 0);
+		if (!ent->weaponModel[0] || ent->weaponModel[0] == -1) {
+			ent->weaponModel[0] = ent->client->ps.weapon;
+		}
+	}
+}
+// Randomizer addition
+//extern void G_CreateG2AttachedWeaponModel(gentity_t* ent, const char* weaponModel);
+//Easier to break this into another function as I refactored a bit to make it cleaner
+void NPC_SetMiscDefaultDataRandomizer(gentity_t* ent)
+{
+	//Broke these into seperate functions for readability
+	Randomizer_InitialSetupNPC(ent);
+	Randomizer_SetupSaber(ent);
+	Randomizer_SetupForcePowers(ent);
+	Randomizer_SetBossInfo(ent);
+	Randomizer_SetTeamInfo(ent);
+	Randomizer_SetupNPCByClass(ent);
+	Randomizer_SetupSpecialWeapons(ent);
+	Randomizer_SetupWeaponModel(ent);
+
+	//Final check to make sure flying NPCs can fly
+	if (ent->client->NPC_class == CLASS_PROBE ||
+		ent->client->NPC_class == CLASS_REMOTE ||
+		ent->client->NPC_class == CLASS_SEEKER ||
+		ent->client->NPC_class == CLASS_SENTRY ||
+		ent->client->NPC_class == CLASS_GLIDER ||
+		ent->client->NPC_class == CLASS_IMPWORKER ||
+		ent->client->NPC_class == CLASS_BOBAFETT ||
+		ent->client->NPC_class == CLASS_ROCKETTROOPER
+		)
+	{
+		ent->NPC->scriptFlags |= SCF_NAV_CAN_FLY;
+	}
+
+	//Vehicles are vehicles
+	if (ent->client->NPC_class == CLASS_VEHICLE)
+	{
+		Vehicle_Register(ent);
+	}
+}
+
+void NPC_SetMiscDefaultData(gentity_t *ent)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		NPC_SetMiscDefaultDataRandomizer(ent);
+		return;
+	}
+
 	if ( ent->spawnflags & SFB_CINEMATIC )
 	{//if a cinematic guy, default us to wait bState
 		ent->NPC->behaviorState = BS_CINEMATIC;
@@ -1273,6 +1754,25 @@ void NPC_Begin (gentity_t *ent)
 	ent->nextthink = level.time + FRAMETIME + Q_irand(0, 100);
 
 	NPC_SetMiscDefaultData( ent );
+
+	// Randomizer Addition
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandNpcHealth.integer) // Encapsulate max hp changes
+	{
+		if (ent->max_health) {
+			uniform_real_distribution<float> NPC_HP_Dist(25, 400);
+			float rng = NPC_HP_Dist(rngRandoEnhancements) / 100; //Get a multiplier value between 0.25 and 4
+			ent->max_health = (int)((float)ent->max_health * rng); //Result gets rounded when converted back to int so nothing explodes
+		}
+	}
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandNPCSpeed.integer)
+	{
+		uniform_real_distribution<float> NPC_Speed_Dist(33, 300);
+		float rng = NPC_Speed_Dist(rngRandoEnhancements) / 100; //Get a multiplier value between 0.33 and 3
+		ent->NPC->stats.runSpeed = (int)((float)ent->NPC->stats.runSpeed * rng);
+		ent->NPC->stats.walkSpeed = (int)((float)ent->NPC->stats.walkSpeed * rng);
+		ent->NPC->stats.yawSpeed = (int)((float)ent->NPC->stats.yawSpeed * rng);
+	}
+
 	if ( ent->health <= 0 )
 	{
 		//ORIGINAL ID: health will count down towards max_health
@@ -1656,6 +2156,11 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent, qboolean fullSpawnNow )
 			}
 			newent->NPC->defaultBehavior = newent->NPC->behaviorState = BS_WAIT;
 	//		newent->svFlags |= SVF_NOPUSH;
+		}
+		// Randomizer addition.
+		//else if (cg_enableRandomizer.integer) {
+		if (cg_enableRandomizer.integer) {
+				newent->client->playerTeam = RandomizerUtils::GetClassTeamByClassname(ent->classname);
 		}
 	}
 //=====================================================================
@@ -2329,6 +2834,9 @@ SHY - Spawner is shy
 */
 void SP_NPC_Galak( gentity_t *self)
 {
+	self->NPC_type = "Galak";
+
+	SP_NPC_spawner(self);
 }
 
 /*QUAKED NPC_Desann(1 0 0) (-16 -16 -24) (16 16 40) x x x x CEILING CINEMATIC NOTSOLID STARTINSOLID SHY
@@ -4055,6 +4563,1283 @@ void SP_NPC_Droid_Saber( gentity_t *self)
 
 	SP_NPC_spawner( self );
 }
+
+// Randomizer addition
+char lastKnownMap[32] = "first_iteration";
+
+void CheckIfMapChanged()
+{
+	if (strcmp(lastKnownMap, level.mapname) != 0)
+	{
+		strcpy(lastKnownMap, level.mapname);
+	}
+}
+
+void SP_NPC_Spawn_Random(gentity_t* self)
+{
+	int numberOfNPCs = 80;
+	uniform_int_distribution<int> NPCDist(0, numberOfNPCs - 1);
+	int rng = NPCDist(rngRandoBase);
+
+	switch (rng)
+	{
+	case 0:
+		SP_NPC_Kyle(self);
+		break;
+	case 1:
+		SP_NPC_Lando(self);
+		break;
+	case 2:
+		SP_NPC_Jan(self);
+		break;
+	case 3:
+		SP_NPC_Luke(self);
+		break;
+	case 4:
+		SP_NPC_MonMothma(self);
+		break;
+	case 5:
+		SP_NPC_Rosh_Penin(self);
+		break;
+	case 6:
+		SP_NPC_Tavion(self);
+		break;
+	case 7:
+		SP_NPC_Tavion_New(self);
+		break;
+	case 8:
+		SP_NPC_Alora(self);
+		break;
+	case 9:
+		SP_NPC_Reelo(self);
+		break;
+	case 10:
+		SP_NPC_Galak(self);
+		break;
+	case 11:
+		SP_NPC_Desann(self);
+		break;
+	case 12:
+		SP_NPC_Rax(self);
+		break;
+	case 13:
+		//SP_NPC_BobaFett(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 14:
+		SP_NPC_Ragnos(self);
+		break;
+	case 15:
+		SP_NPC_Lannik_Racto(self);
+		break;
+	case 16:
+		SP_NPC_Kothos(self);
+		break;
+	case 17:
+		SP_NPC_Chewbacca(self);
+		break;
+	case 18:
+		SP_NPC_Bartender(self);
+		break;
+	case 19:
+		SP_NPC_MorganKatarn(self);
+		break;
+	case 20:
+		SP_NPC_Jedi(self);
+		break;
+	case 21:
+		SP_NPC_Prisoner(self);
+		break;
+	case 22:
+		SP_NPC_Merchant(self);
+		break;
+	case 23:
+		SP_NPC_Rebel(self);
+		break;
+	case 24:
+		SP_NPC_Human_Merc(self);
+		break;
+	case 25:
+		SP_NPC_Stormtrooper(self);
+		break;
+	case 26:
+		SP_NPC_StormtrooperOfficer(self);
+		break;
+	case 27:
+		SP_NPC_Tie_Pilot(self);
+		break;
+	case 28:
+		SP_NPC_Snowtrooper(self);
+		break;
+	case 29:
+		SP_NPC_RocketTrooper(self);
+		break;
+	case 30:
+		//These guys have their own squad logic that breaks a lot - no thank you
+		//SP_NPC_HazardTrooper(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 31:
+		SP_NPC_Ugnaught(self);
+		break;
+	case 32:
+		//SP_NPC_Jawa(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 33:
+		SP_NPC_Gran(self);
+		break;
+	case 34:
+		SP_NPC_Rodian(self);
+		break;
+	case 35:
+		SP_NPC_Weequay(self);
+		break;
+	case 36:
+		SP_NPC_Trandoshan(self);
+		break;
+	case 37:
+		SP_NPC_Tusken(self);
+		break;
+	case 38:
+		SP_NPC_Noghri(self);
+		break;
+	case 39:
+		SP_NPC_SwampTrooper(self);
+		break;
+	case 40:
+		SP_NPC_Imperial(self);
+		break;
+	case 41:
+		SP_NPC_ImpWorker(self);
+		break;
+	case 42:
+		SP_NPC_BespinCop(self);
+		break;
+	case 43:
+		SP_NPC_Reborn(self);
+		break;
+	case 44:
+		SP_NPC_Reborn_New(self);
+		break;
+	case 45:
+		SP_NPC_Cultist(self);
+		break;
+	case 46:
+		SP_NPC_Cultist_Saber(self);
+		break;
+	case 47:
+		SP_NPC_Cultist_Saber_Powers(self);
+		break;
+	case 48:
+		// No, these guys when dying doesn't trigger any death related script for some reason.
+		// But they are funny NGL.
+		//SP_NPC_Cultist_Destroyer(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 49:
+		SP_NPC_Cultist_Commando(self);
+		break;
+	case 50:
+		SP_NPC_ShadowTrooper(self);
+		break;
+	case 51:
+		SP_NPC_Saboteur(self);
+		break;
+	case 52:
+		//SP_NPC_Monster_Murjj(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 53:
+		//SP_NPC_Monster_Swamp(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 54:
+		//SP_NPC_Monster_Howler(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 55:
+		//SP_NPC_Monster_Rancor(self);
+		// No more
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 56:
+		//SP_NPC_Monster_Mutant_Rancor(self);
+		// No more
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 57:
+		SP_NPC_Monster_Wampa(self);
+		break;
+	case 58:
+		//SP_NPC_Monster_Claw(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 59:
+		//SP_NPC_Monster_Glider(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 60:
+		//SP_NPC_Monster_Flier2(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 61:
+		//SP_NPC_Monster_Lizard(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 62:
+		//SP_NPC_Monster_Fish(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 63:
+		//SP_NPC_Monster_Sand_Creature(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 64:
+		//SP_NPC_MineMonster(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 65:
+		//SP_NPC_Droid_Interrogator(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 66:
+		//SP_NPC_Droid_Probe(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 67:
+		//SP_NPC_Droid_Mark1(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 68:
+		//SP_NPC_Droid_Mark2(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 69:
+		//SP_NPC_Droid_ATST(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 70:
+		//SP_NPC_Droid_Seeker(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 71:
+		//SP_NPC_Droid_Remote(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 72:
+		//SP_NPC_Droid_Sentry(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 73:
+		//SP_NPC_Droid_Gonk(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 74:
+		//SP_NPC_Droid_Mouse(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 75:
+		//SP_NPC_Droid_R2D2(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 76:
+		//SP_NPC_Droid_R5D2(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 77:
+		//SP_NPC_Droid_Protocol(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 78:
+		//SP_NPC_Droid_Assassin(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 79:
+		//SP_NPC_Droid_Saber(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	default:
+		// Impossible
+		SP_NPC_Stormtrooper(self);
+		break;
+	}
+
+}
+
+void SP_NPC_Spawn_Random_Humanoid(gentity_t* self) // Used for cutscenes or other
+{
+	int numberOfHumanoid = 51;
+	uniform_int_distribution<int> NPC_H_Dist(0, numberOfHumanoid - 1);
+	int rng = NPC_H_Dist(rngRandoBase);
+
+	switch (rng)
+	{
+	case 0:
+		SP_NPC_Kyle(self);
+		break;
+	case 1:
+		SP_NPC_Lando(self);
+		break;
+	case 2:
+		SP_NPC_Jan(self);
+		break;
+	case 3:
+		SP_NPC_Luke(self);
+		break;
+	case 4:
+		SP_NPC_MonMothma(self);
+		break;
+	case 5:
+		SP_NPC_Rosh_Penin(self);
+		break;
+	case 6:
+		SP_NPC_Tavion(self);
+		break;
+	case 7:
+		SP_NPC_Tavion_New(self);
+		break;
+	case 8:
+		SP_NPC_Alora(self);
+		break;
+	case 9:
+		SP_NPC_Reelo(self);
+		break;
+	case 10:
+		SP_NPC_Galak(self);
+		break;
+	case 11: // Check if that's good, he is taller
+		SP_NPC_Desann(self);
+		break;
+	case 12: // Who is that ?
+		SP_NPC_Rax(self);
+		break;
+	case 13:
+		//SP_NPC_BobaFett(self);
+		SP_NPC_Spawn_Random_Humanoid(self);
+		break;
+	case 14:
+		SP_NPC_Lannik_Racto(self);
+		break;
+	case 15: // Who is that ?
+		SP_NPC_Kothos(self);
+		break;
+	case 16: // Check if that's good, he is taller
+		SP_NPC_Chewbacca(self);
+		break;
+	case 17:
+		SP_NPC_Bartender(self);
+		break;
+	case 18:
+		SP_NPC_MorganKatarn(self);
+		break;
+	case 19:
+		SP_NPC_Jedi(self);
+		break;
+	case 20:
+		SP_NPC_Prisoner(self);
+		break;
+	case 21:
+		SP_NPC_Merchant(self);
+		break;
+	case 22:
+		SP_NPC_Rebel(self);
+		break;
+	case 23:
+		SP_NPC_Human_Merc(self);
+		break;
+	case 24:
+		SP_NPC_Stormtrooper(self);
+		break;
+	case 25:
+		SP_NPC_StormtrooperOfficer(self);
+		break;
+	case 26:
+		SP_NPC_Tie_Pilot(self);
+		break;
+	case 27:
+		SP_NPC_Snowtrooper(self);
+		break;
+	case 28:
+		SP_NPC_RocketTrooper(self);
+		break;
+	case 29:
+		SP_NPC_HazardTrooper(self);
+		break;
+	case 30:
+		SP_NPC_Ugnaught(self);
+		break;
+	case 31:
+		//SP_NPC_Jawa(self);
+		// Not an humanoid
+		SP_NPC_Spawn_Random_Humanoid(self);
+		break;
+	case 32:
+		SP_NPC_Gran(self);
+		break;
+	case 33:
+		SP_NPC_Rodian(self);
+		break;
+	case 34:
+		SP_NPC_Weequay(self);
+		break;
+	case 35:
+		SP_NPC_Trandoshan(self);
+		break;
+	case 36: // Who is that ?
+		SP_NPC_Tusken(self);
+		break;
+	case 37: // Who is that
+		SP_NPC_Noghri(self);
+		break;
+	case 38:
+		SP_NPC_SwampTrooper(self);
+		break;
+	case 39:
+		SP_NPC_Imperial(self);
+		break;
+	case 40:
+		SP_NPC_ImpWorker(self);
+		break;
+	case 41:
+		SP_NPC_BespinCop(self);
+		break;
+	case 42:
+		SP_NPC_Reborn(self);
+		break;
+	case 43:
+		SP_NPC_Reborn_New(self);
+		break;
+	case 44:
+		SP_NPC_Cultist(self);
+		break;
+	case 45:
+		SP_NPC_Cultist_Saber(self);
+		break;
+	case 46:
+		SP_NPC_Cultist_Saber_Powers(self);
+		break;
+	case 47:
+		// No, these guys when dying doesn't trigger any death related script for some reason.
+		// But they are funny NGL.
+		//SP_NPC_Cultist_Destroyer(self);
+		SP_NPC_Spawn_Random(self);
+		break;
+	case 48:
+		SP_NPC_Cultist_Commando(self);
+		break;
+	case 49:
+		SP_NPC_ShadowTrooper(self);
+		break;
+	case 50:
+		SP_NPC_Saboteur(self);
+		break;
+
+	default:
+		// Impossible
+		SP_NPC_Stormtrooper(self);
+		break;
+	}
+}
+
+// If the Randomizer is disabled, bit of process time is added at every check, but it should be comptable with the standard SpeedAcademy since time is paused during loads.
+void SP_NPC_Player_Random(gentity_t* self)
+{
+	// Let's nooooot touch this, ever, ok ?
+	if (cg_enableRandomizer.integer)
+	{
+		SP_NPC_Player(self);
+		/*
+		self->client->enemyTeam = TEAM_ENEMY;
+		self->client->clientInfo.team = TEAM_PLAYER;
+		self->client->sess.sessionTeam = TEAM_PLAYER;
+		*/
+	}
+	else SP_NPC_Player(self);
+}
+void SP_NPC_Kyle_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		/*
+		if (strcmp(lastKnownMap, "artus_topside") == 0)
+		{
+			if (self->behaviorSet[0]) // Check for NULL
+			{
+				if (strcmp(self->behaviorSet[0], "artus_topside/shoot_prisoners") == 0)
+				{
+					SP_NPC_Spawn_Random_Humanoid(self);
+					return;
+				}
+				if (strcmp(self->behaviorSet[0], "artus_topside/shoot_prisoners_crouch") == 0)
+				{
+					SP_NPC_Spawn_Random_Humanoid(self);
+					return;
+				}
+			}
+		}
+		if (strcmp(lastKnownMap, "artus_detention") == 0) // The warden that we have hostage
+		{
+			if (self->NPC_targetname)
+			{
+				if (!strcmp(self->NPC_targetname, "warden"))
+				{
+					SP_NPC_Spawn_Random_Humanoid(self);
+					return;
+				}
+			}
+		}
+		*/
+		/*
+		if (strcmp(lastKnownMap, "vjun1") == 0) // Give the NPC that will replace Kyle Force protect or he will die by the rain
+		{
+			// behaviorSet	0x7ac7d2e8 {0x14cd3e7c "vjun1/kyle_follows", 0x00000000 <NULL>, 0x00000000 <NULL>, 0x00000000 <NULL>, ...}	char *[17]
+			//SP_NPC_Spawn_Random_Humanoid(self);
+			// Client does not exist yet, can't allocate force power here
+			//self->client->ps.forcePowersKnown |= (1 << FP_PROTECT);
+			//self->client->ps.forcePowerLevel[FP_PROTECT] = FORCE_LEVEL_3;
+			//self->client->ps.forcePower = 100;
+			return;
+		}
+		*/
+		SP_NPC_Spawn_Random_Humanoid(self);
+	}
+	else SP_NPC_Kyle(self);
+}
+void SP_NPC_Lando_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Lando(self);
+}
+void SP_NPC_Jan_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Jan(self);
+}
+void SP_NPC_Luke_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random_Humanoid(self);
+	}
+	else SP_NPC_Luke(self);
+}
+void SP_NPC_MonMothma_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_MonMothma(self);
+}
+void SP_NPC_Rosh_Penin_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random_Humanoid(self);
+		//SP_NPC_Rosh_Penin(self);
+	}
+	else SP_NPC_Rosh_Penin(self);
+}
+void SP_NPC_Tavion_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random_Humanoid(self);
+	}
+	else SP_NPC_Tavion(self);
+}
+void SP_NPC_Tavion_New_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random_Humanoid(self);
+	}
+	else SP_NPC_Tavion_New(self);
+}
+void SP_NPC_Alora_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random_Humanoid(self);
+	}
+	else SP_NPC_Alora(self);
+}
+void SP_NPC_Reelo_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Reelo(self);
+}
+void SP_NPC_Galak_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Galak(self);
+}
+void SP_NPC_Desann_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Desann(self);
+}
+void SP_NPC_Rax_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Rax(self);
+}
+void SP_NPC_BobaFett_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		//SP_NPC_Spawn_Random(self);
+		SP_NPC_BobaFett(self);
+	}
+	else SP_NPC_BobaFett(self);
+}
+void SP_NPC_Ragnos_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Ragnos(self);
+}
+void SP_NPC_Lannik_Racto_Random(gentity_t* self)
+{
+	// Fix me : in t2_rogue, the droids have a strange AI in seed 3804079049.
+	// One of them despawn instead of dying, making a softlock
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Lannik_Racto(self);
+}
+void SP_NPC_Kothos_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Kothos(self);
+}
+void SP_NPC_Chewbacca_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Chewbacca(self);
+}
+void SP_NPC_Bartender_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Bartender(self);
+}
+void SP_NPC_MorganKatarn_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_MorganKatarn(self);
+}
+void SP_NPC_Jedi_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Jedi(self);
+}
+void SP_NPC_Prisoner_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Prisoner(self);
+}
+void SP_NPC_Merchant_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Merchant(self);
+}
+void SP_NPC_Rebel_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Rebel(self);
+}
+void SP_NPC_Human_Merc_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Human_Merc(self);
+}
+void SP_NPC_Stormtrooper_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Stormtrooper(self);
+}
+void SP_NPC_StormtrooperOfficer_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_StormtrooperOfficer(self);
+}
+void SP_NPC_Tie_Pilot_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Tie_Pilot(self);
+}
+void SP_NPC_Snowtrooper_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Snowtrooper(self);
+}
+void SP_NPC_RocketTrooper_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_RocketTrooper(self);
+}
+void SP_NPC_HazardTrooper_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_HazardTrooper(self);
+}
+void SP_NPC_Ugnaught_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Ugnaught(self);
+}
+void SP_NPC_Jawa_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Jawa(self);
+}
+void SP_NPC_Gran_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Gran(self);
+}
+void SP_NPC_Rodian_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Rodian(self);
+}
+void SP_NPC_Weequay_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Weequay(self);
+}
+void SP_NPC_Trandoshan_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Trandoshan(self);
+}
+void SP_NPC_Tusken_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Tusken(self);
+}
+void SP_NPC_Noghri_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Noghri(self);
+}
+void SP_NPC_SwampTrooper_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_SwampTrooper(self);
+}
+void SP_NPC_Imperial_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Imperial(self);
+}
+void SP_NPC_ImpWorker_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_ImpWorker(self);
+}
+void SP_NPC_BespinCop_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_BespinCop(self);
+}
+void SP_NPC_Reborn_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Reborn(self);
+}
+void SP_NPC_Reborn_New_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Reborn_New(self);
+}
+void SP_NPC_Cultist_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Cultist(self);
+}
+void SP_NPC_Cultist_Saber_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Cultist_Saber(self);
+}
+void SP_NPC_Cultist_Saber_Powers_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Cultist_Saber_Powers(self);
+}
+void SP_NPC_Cultist_Destroyer_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Cultist_Destroyer(self);
+}
+void SP_NPC_Cultist_Commando_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Cultist_Commando(self);
+}
+void SP_NPC_ShadowTrooper_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_ShadowTrooper(self);
+}
+void SP_NPC_Saboteur_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Saboteur(self);
+}
+void SP_NPC_Monster_Murjj_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Murjj(self);
+}
+void SP_NPC_Monster_Swamp_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Swamp(self);
+}
+void SP_NPC_Monster_Howler_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Howler(self);
+}
+void SP_NPC_Monster_Rancor_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		//SP_NPC_Spawn_Random(self);
+		// disabled rancors for the rando, but keep the normal ones
+		SP_NPC_Monster_Rancor(self);
+	}
+	else SP_NPC_Monster_Rancor(self);
+}
+void SP_NPC_Monster_Mutant_Rancor_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		//SP_NPC_Spawn_Random(self);
+		// disabled rancors for the rando, but keep the normal ones
+		SP_NPC_Monster_Mutant_Rancor(self);
+	}
+	else SP_NPC_Monster_Mutant_Rancor(self);
+}
+void SP_NPC_Monster_Wampa_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Wampa(self);
+}
+void SP_NPC_Monster_Claw_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Claw(self);
+}
+void SP_NPC_Monster_Glider_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Glider(self);
+}
+void SP_NPC_Monster_Flier2_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Flier2(self);
+}
+void SP_NPC_Monster_Lizard_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Lizard(self);
+}
+void SP_NPC_Monster_Fish_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Fish(self);
+}
+void SP_NPC_Monster_Sand_Creature_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Monster_Sand_Creature(self);
+}
+void SP_NPC_MineMonster_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_MineMonster(self);
+}
+void SP_NPC_Droid_Interrogator_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Interrogator(self);
+}
+void SP_NPC_Droid_Probe_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Probe(self);
+}
+void SP_NPC_Droid_Mark1_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Mark1(self);
+}
+void SP_NPC_Droid_Mark2_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Mark2(self);
+}
+void SP_NPC_Droid_ATST_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_ATST(self);
+}
+void SP_NPC_Droid_Seeker_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Seeker(self);
+}
+void SP_NPC_Droid_Remote_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		// Their hole are too small, like r5d2 in bespin_undercity. So we can't spawn anything big like an humanoid
+		if (strcmp(lastKnownMap, "yavin2") == 0)
+		{
+			SP_NPC_Droid_Remote(self);
+			return;
+		}
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Remote(self);
+}
+void SP_NPC_Droid_Sentry_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Sentry(self);
+}
+void SP_NPC_Droid_Gonk_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Gonk(self);
+}
+void SP_NPC_Droid_Mouse_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Mouse(self);
+}
+void SP_NPC_Droid_R2D2_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_R2D2(self);
+}
+void SP_NPC_Droid_R5D2_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+
+		if (strcmp(lastKnownMap,"t1_surprise") == 0) SP_NPC_Droid_R5D2(self);
+		else SP_NPC_Spawn_Random(self);
+
+	}
+	else SP_NPC_Droid_R5D2(self);
+}
+void SP_NPC_Droid_Protocol_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Protocol(self);
+}
+void SP_NPC_Droid_Assassin_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Assassin(self);
+}
+void SP_NPC_Droid_Saber_Random(gentity_t* self)
+{
+	if (cg_enableRandomizer.integer)
+	{
+		// Fix me : in yavin2, you can softlock because the NPC going out of the room Rosh opens can die due to collision
+		CheckIfMapChanged();
+		SP_NPC_Spawn_Random(self);
+	}
+	else SP_NPC_Droid_Saber(self);
+}
+
+
+
 
 //NPC console commands
 /*

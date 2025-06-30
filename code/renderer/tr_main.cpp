@@ -1317,6 +1317,43 @@ void R_AddDrawSurf( const surfaceType_t *surface, const shader_t *shader, int fo
 	tr.refdef.numDrawSurfs++;
 }
 
+std::map<int, int> shaderMap;
+string lastKownMap = ".";
+
+int GetRandomValidShader(int sort) {
+	int rng = rand() % 200;
+	int skippedCount = 0;
+	while (1) { //due to not knowing how many shaders we have of a given type we may have to iterate over the array multiple times
+		for (int i = 0; i < MAX_SHADERS - 1; i++) {
+			if (tr.shaders[i]) { //Safety first
+				//if the first 3 chars match so we're looking at the same type e.g. gfx/ or models/
+				if (Q_strncmp(tr.shaders[i]->name, tr.shaders[(sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]->name, 3)) {
+					if (skippedCount == rng) { //skip valid shaders until we hit the rng value
+						//We have our shader
+						return i;
+					}
+					else {
+						skippedCount++;
+					}
+				}
+			}
+		}
+	}
+}
+
+void InitShaderMap() {
+	shaderMap.clear();
+	lastKownMap = cl.mapname;
+	for (int i = 0; i < MAX_SHADERS - 1; i++) {
+		if (tr.shaders[i]) {
+			shaderMap[i] = GetRandomValidShader(i);
+		}
+	}
+}
+
+
+// Randomizer : take from a random shader
+bool takeFromRandomShader = false;
 /*
 =================
 R_DecomposeSort
@@ -1325,7 +1362,15 @@ R_DecomposeSort
 void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
 					 int *fogNum, int *dlightMap ) {
 	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
-	*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
+	if (takeFromRandomShader)
+	{
+		//Pluck a randomized texture from the map
+		*shader = tr.sortedShaders[shaderMap[(sort >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1)]];
+	}
+	else {
+		//Vanilla
+		*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
+	}
 	*entityNum = ( sort >> QSORT_ENTITYNUM_SHIFT ) & (MAX_ENTITIES-1);
 	*dlightMap = sort & 3;
 }
@@ -1362,6 +1407,20 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// sort the drawsurfs by sort type, then orientation, then shader
 	qsortFast (drawSurfs, numDrawSurfs, sizeof(drawSurf_t) );
 #endif
+
+	// Randomizer stuff : we determine once per frame instead per frame per surface
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
+		Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
+		Cvar_VariableIntegerValue("cg_enableRandTextures"))
+	{
+		if (lastKownMap == "." || cl.mapname != lastKownMap)
+		{
+			//Map has changed, re-init shader map
+			InitShaderMap();
+		}
+		takeFromRandomShader = true;
+	}
+	else takeFromRandomShader = false;
 
 	// check for any pass through drawing, which
 	// may cause another view to be rendered first

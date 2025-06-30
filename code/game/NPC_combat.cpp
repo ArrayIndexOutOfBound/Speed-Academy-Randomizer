@@ -10,6 +10,9 @@
 #include "g_navigator.h"
 #include "wp_saber.h"
 
+// Randomizer addition
+extern vmCvar_t	cg_enableRandomizer;
+
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
 extern void G_SetEnemy( gentity_t *self, gentity_t *enemy );
 extern qboolean NPC_CheckLookTarget( gentity_t *self );
@@ -418,6 +421,10 @@ void G_SetEnemy( gentity_t *self, gentity_t *enemy )
 #ifdef _DEBUG
 	if ( self->s.number )
 	{
+		//Debug convenience, this doesn't change anything in FinalBuild but prevents popups when debugging
+		if (cg_enableRandomizer.integer && enemy == self) {
+			return;
+		}
 		assert( enemy != self );
 	}
 #endif// _DEBUG
@@ -1102,7 +1109,7 @@ void ShootThink( void )
 	if ( level.time < NPCInfo->shotTime ) 
 	{
 		return;
-	}
+		}
 
 	ucmd.buttons |= BUTTON_ATTACK;
 
@@ -2027,7 +2034,13 @@ gentity_t *NPC_CheckEnemy( qboolean findNew, qboolean tooFarOk, qboolean setEnem
 
 	if ( NPC->enemy )
 	{
-		if ( !NPC->enemy->inuse )//|| NPC->enemy == NPC )//wtf?  NPCs should never get mad at themselves!
+		//If we're targeting a neutral character (e.g. player during artus_detention officer escort) - don't
+		//Amber TODO: We still get aggro'd to here, annoying
+		if (cg_enableRandomizer.integer && NPC->enemy->client && NPC->enemy->client->playerTeam == TEAM_NEUTRAL)
+		{
+			G_ClearEnemy(NPC);
+		}
+		else if ( !NPC->enemy->inuse )//|| NPC->enemy == NPC )//wtf?  NPCs should never get mad at themselves!
 		{
 			if ( setEnemy )
 			{

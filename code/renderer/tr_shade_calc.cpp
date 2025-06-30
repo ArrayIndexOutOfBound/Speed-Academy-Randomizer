@@ -1209,7 +1209,17 @@ void RB_CalcElevationTexCoords( float *dstTexCoords ) {
 	const float elevAreaRatio = elevAreaHeight / elevTextureHeight;
 	const float elevAreaOffset = 1.0f/elevTextureHeight;
 
-	const float signEB = Cvar_VariableIntegerValue("g_reverseBoosts") ? -1.0 : 1.0;
+	float signEB = 1.0;
+	//Control by randomizer
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
+		Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
+		Cvar_VariableIntegerValue("cg_enableRandMovementRestrictions")) {
+		signEB = Cvar_VariableIntegerValue("g_randomizerEnableReverseBoost") ? -1.0 : 1.0;
+	}
+	//Control by SpeedAcademy Config
+	else {
+		signEB = Cvar_VariableIntegerValue("g_reverseBoosts") ? -1.0 : 1.0;
+	}
 
 	// This reflects SURFACE_CLIP_EPSILON from the collision code (cm_local.h).
 	// A small hull around geometry such that collision starts a little earlier.

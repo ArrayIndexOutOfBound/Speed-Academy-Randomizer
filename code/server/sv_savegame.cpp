@@ -1319,7 +1319,15 @@ qboolean SG_ReadSavegame(const char *psPathlessBaseName)
 
 	// read game state
 	qbAutosave = ReadGame();
-	eSavedGameJustLoaded = (qbAutosave)?eAUTO:eFULL;
+
+	//When resetting using the auto_yavin1b save
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer") && !strcmp("auto_yavin1b", psPathlessBaseName))
+	{
+		eSavedGameJustLoaded = eRESET;
+	}
+	else {
+		eSavedGameJustLoaded = (qbAutosave) ? eAUTO : eFULL;
+	}
 
 	const bool isSameMap = !Q_stricmp(sMapCmd, sv_mapname->string);
 	SV_SpawnServer(sMapCmd, eForceReload_NOTHING, (eSavedGameJustLoaded != eFULL) );	// note that this also trashes the whole G_Alloc pool as well (of course)		

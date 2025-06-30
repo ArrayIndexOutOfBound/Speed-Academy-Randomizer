@@ -418,6 +418,38 @@ vmCvar_t	cg_yawSpeeder;
 vmCvar_t	cg_yawTauntaun;
 vmCvar_t	cg_yawVehicle;
 
+// Randomizer addition
+vmCvar_t	cg_enableRandomizer;
+vmCvar_t	cg_enableRandomizerEnhancements;
+vmCvar_t	cg_drawSeed;
+vmCvar_t	cg_useSetSeed;
+vmCvar_t	cg_setSeed;
+vmCvar_t	cg_randomizerDebug;
+// Better rng for randomizer : uniform distribution.
+#include <random>
+mt19937 rngRandoBase;
+mt19937 rngRandoEnhancements;
+// Randomizer - evil mode
+//vmCvar_t	cg_enableRandSaberStyle; // No, we will handle Force differently in Academy
+vmCvar_t	cg_enableRandSaberColor;
+vmCvar_t	cg_enableRandSaberLength;
+vmCvar_t	cg_enableRandJumpHeight;
+vmCvar_t	cg_enableRandJumpStrength;
+vmCvar_t	cg_enableRandLanguageVoices;
+vmCvar_t	cg_enableRandTextures;
+vmCvar_t	cg_enableRandWeaponProjectile;
+vmCvar_t	cg_enableRandWeaponProjectileMode;
+vmCvar_t	cg_enableRandNPCSpeed;
+vmCvar_t	cg_enableRandNpcHealth;
+vmCvar_t	cg_enableRandPlayerHealth;
+vmCvar_t	cg_enableRandSounds;
+vmCvar_t	cg_enableRandJumpSound;
+vmCvar_t	memorized_player_health;
+vmCvar_t	cg_enableRandAllMissions;
+vmCvar_t	cg_enableRandMovementRestrictions;
+vmCvar_t	cg_enableRandMovementType;
+vmCvar_t	cg_safeCompanions;
+
 typedef struct {
 	vmCvar_t	*vmCvar;
 	char		*cvarName;
@@ -641,6 +673,34 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_yawSpeeder, "cg_yawSpeeder", "0.0", CVAR_ARCHIVE },
 	{ &cg_yawTauntaun, "cg_yawTauntaun", "0.0", CVAR_ARCHIVE },
 	{ &cg_yawVehicle, "cg_yawVehicle", "0.0", CVAR_ARCHIVE },
+
+	// Randomizer addition
+	{ &cg_enableRandomizer, "cg_enableRandomizer", "0", CVAR_ARCHIVE }, // By default, it's disabled
+	{ &cg_enableRandomizerEnhancements, "cg_enableRandomizerEnhancements", "0", CVAR_ARCHIVE }, // By default, it's disabled
+	{ &cg_drawSeed, "cg_drawSeed", "0", CVAR_ARCHIVE },
+	{ &cg_useSetSeed, "cg_useSetSeed", "0", CVAR_ARCHIVE },
+	{ &cg_setSeed, "cg_setSeed", "", CVAR_ARCHIVE },
+	{ &cg_randomizerDebug, "cg_randomizerDebug", "0", CVAR_ARCHIVE },
+	// Randomizer - evil mode
+	{ &cg_enableRandSaberColor, "cg_enableRandSaberColor", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandSaberLength, "cg_enableRandSaberLength", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandJumpHeight, "cg_enableRandJumpHeight", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandJumpStrength, "cg_enableRandJumpStrength", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandLanguageVoices, "cg_enableRandLanguageVoices", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandTextures, "cg_enableRandTextures", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandWeaponProjectile, "cg_enableRandWeaponProjectile", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandWeaponProjectileMode, "cg_enableRandWeaponProjectileMode", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandNPCSpeed, "cg_enableRandNPCSpeed", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandPlayerHealth, "cg_enableRandPlayerHealth", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandNpcHealth, "cg_enableRandNpcHealth", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandSounds, "cg_enableRandSounds", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandJumpSound, "cg_enableRandJumpSound", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandAllMissions, "cg_enableRandAllMissions", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandMovementRestrictions, "cg_enableRandMovementRestrictions", "0", CVAR_ARCHIVE },
+	{ &cg_enableRandMovementType, "cg_enableRandMovementType", "0", CVAR_ARCHIVE },
+	{ &cg_safeCompanions, "cg_safeCompanions", "0", CVAR_ARCHIVE },
+	// Randomizer : information holder
+	{ &memorized_player_health, "memorized_player_health", "0", CVAR_ARCHIVE },
 };
 
 static int cvarTableSize = sizeof( cvarTable ) / sizeof( cvarTable[0] );
@@ -1445,13 +1505,21 @@ static void CG_RegisterEffects( void )
 
 		if (!theFxScheduler.RegisterEffect( (const char*)effectName ))
 		{
-			assert(0);
-			numFailed++;
+			// Randomizer, skip some effects, that's ok
+			if (cg_enableRandomizer.integer)
+			{
+
+			}
+			else
+			{
+				assert(0);
+				numFailed++;
+			}
 		}
 	}
 	if (numFailed && g_delayedShutdown->integer)
 	{
-		assert(0);
+		//assert(0);
 		CG_Error( "CG_RegisterEffects: %i Effects failed to load.  Please fix, or ask Aurelio.", numFailed );
 	}
 
@@ -2101,6 +2169,25 @@ Ghoul2 Insert End
 		// Send off the terrainInfo to the renderer
 		cgi_RE_InitRendererTerrain( terrainInfo );
 	}
+
+	// Randomizer additions : register all items
+	if (cg_enableRandomizer.integer) {
+		for (i = ITM_SABER_PICKUP; i < ITM_FORCE_SABERTHROW_PICKUP; i++) {
+			if (!(i >= ITM_EMPLACED_GUN_PICKUP && i <= ITM_NOGHRI_STICK_PICKUP))
+			{
+				CG_LoadingString(bg_itemlist[i].classname);
+				CG_RegisterItemVisuals(i);
+			}
+			else
+			{
+				//CG_LoadingString(bg_itemlist[i].classname);
+				//CG_RegisterItemVisuals(i);
+			}
+			
+		}
+	}
+
+
 }
 
 //===========================================================================

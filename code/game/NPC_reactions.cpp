@@ -12,6 +12,9 @@
 #include "wp_saber.h"
 #include "g_Vehicles.h"
 
+// Randomizer addition
+extern vmCvar_t	cg_enableRandomizer;
+
 extern qboolean G_CheckForStrongAttackMomentum( gentity_t *self );
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
 extern int PM_AnimLength( int index, animNumber_t anim );
@@ -612,11 +615,19 @@ void NPC_Touch(gentity_t *self, gentity_t *other, trace_t *trace)
 			}
 			if ( keyTaken )
 			{//remove my key
-				gi.G2API_SetSurfaceOnOff( &self->ghoul2[self->playerModel], "l_arm_key", 0x00000002 );
-				self->message = NULL;
-				self->client->ps.eFlags &= ~EF_FORCE_VISIBLE;	//remove sight flag
-				G_Sound( player, G_SoundIndex( "sound/weapons/key_pkup.wav" ) );
-			}
+				// Randomizer addition
+				if (cg_enableRandomizer.integer && self->playerModel == -1) {
+					//Some NPCs do not leave a model behind after death - so don't try to remove it
+					self->message = NULL;
+					G_Sound(player, G_SoundIndex("sound/weapons/key_pkup.wav"));
+				}
+				else
+				{
+					gi.G2API_SetSurfaceOnOff(&self->ghoul2[self->playerModel], "l_arm_key", 0x00000002);
+					self->message = NULL;
+					self->client->ps.eFlags &= ~EF_FORCE_VISIBLE;	//remove sight flag
+					G_Sound(player, G_SoundIndex("sound/weapons/key_pkup.wav"));
+				}			}
 			gi.SendServerCommand( NULL, text );
 		}
 	}

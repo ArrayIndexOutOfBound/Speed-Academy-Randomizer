@@ -1222,6 +1222,42 @@ static qboolean PM_CheckJump( void )
 				}
 				*/
 				float curHeight = pm->ps->origin[2] - pm->ps->forceJumpZStart;
+
+				// Randomizer addition : Here is when a FORCE jump is done. Normal jump is not touched.
+				// curHeight is zero when we start a jump, so if it is zero and we start a force jump 
+
+				if (curHeight == 0 && cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer)
+				{
+					if (cg_enableRandJumpHeight.integer)
+					{
+						// Need to change the rng calls later
+						// Change the values for the force jumps, not the normal one (but since this is called when you have force power, that don't change much)
+						for (int i = 1; i < 4; i++)
+						{
+							uniform_int_distribution<int> localDist(1, 768);
+
+							int newHeight = localDist(rngRandoEnhancements) + 10; // 10 as the minimum, 768 as the maximum, which is double force jump 3
+							forceJumpHeight[i] = newHeight;
+							// forceJumpHeightMax is not declared in this score, maybe it's not needed ?
+							// forceJumpHeightMax[i] = newHeight + 34;
+
+						}
+					}
+					if (cg_enableRandJumpStrength.integer)
+					{
+						// Need to change the rng calls later
+						// Change the values for the force jumps, not the normal one (but since this is called when you have force power, that don't change much)
+						for (int i = 1; i < 4; i++)
+						{
+							//int newStrength = rand() % 1568 + 112; // 112 as the minimum, 225 is the normal value for no force, 1680 as the maximum, which is double force jump 3
+							uniform_int_distribution<int> localDist(1, 3775);
+							int newStrength = localDist(rngRandoEnhancements) + 225; // Base Velocity is guaranted, but now every jump can be extremely fast
+							forceJumpStrength[i] = newStrength;
+						}
+					}
+				}
+
+
 				//check for max force jump level and cap off & cut z vel
 				if ( ( curHeight<=forceJumpHeight[0] ||//still below minimum jump height
 						(pm->ps->forcePower&&pm->cmd.upmove>=10) ) &&////still have force power available and still trying to jump up 
@@ -3496,6 +3532,12 @@ static void PM_CrashLandDamage( int damage )
 			damage = PM_DamageForDelta( damage );
 		}
 
+		//Let's not kill NPCs who're scripted to jump
+		if (cg_enableRandomizer.integer && pm->gent->NPC && pm->gent->NPC->behaviorState == BS_JUMP)
+		{
+			damage = 0;
+		}
+
 		if ( damage )
 		{
 			pm->gent->painDebounceTime = level.time + 200;	// no normal pain sound
@@ -3574,10 +3616,23 @@ static float PM_CrashLandDelta( vec3_t prev_vel, int waterlevel )
 	return delta;
 }
 
+bool MovementRestrictionSet(int originalConfig, int randomizerConfig) {
+	//We're controlling movement restrictions with randomizer
+	if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer && cg_enableRandMovementRestrictions.integer) {
+		if (randomizerConfig) {
+			return true;
+		}
+	}
+	//Use regular SpeedAcademy config
+	else if (originalConfig) {
+		return true;
+	}
+	return false;
+}
+
 void PM_StickLanding( void )
 {
-	if ( g_vrgi->integer )
-	{
+	if(MovementRestrictionSet(g_vrgi->integer, g_randomizerEnableVrgi->integer)) {
 		//stick landings some
 		pm->ps->velocity[0] *= 0.5f;
 		pm->ps->velocity[1] *= 0.5f;
@@ -3605,7 +3660,7 @@ int PM_GetLandingAnim( void )
 	}
 	else if ( PM_InAirKickingAnim( anim ) )
 	{
-		if ( !g_spinGlitch->integer ) {
+		if ( !MovementRestrictionSet(g_spinGlitch->integer, g_randomizerEnableSpinGlitch->integer)) {
 			// This is not really spinning; but it is another animation that can
 			// be used to avoid VRGI. So we treat it the same as spin glitch and
 			// apply the VRGI when spin glitch is disabled.
@@ -3632,7 +3687,7 @@ int PM_GetLandingAnim( void )
 
 	if ( PM_SpinningAnim( anim ) || PM_SaberInSpecialAttack( anim ) )
 	{
-		if ( !g_spinGlitch->integer ) {
+		if ( !MovementRestrictionSet(g_spinGlitch->integer, g_randomizerEnableSpinGlitch->integer) ) {
 			PM_StickLanding();
 		} else if ( pm->ps->clientNum == 0 ) {
 			speedrun::SetLastLandingInfo({speedrun::LandingType::SpinGlitch, level.time});
@@ -3968,7 +4023,7 @@ static void PM_CrashLand( void )
 		return;
 	}
 
-	const float signEB = (g_reverseBoosts->integer ? -1.0f : 1.0f);
+	const float signEB = (MovementRestrictionSet(g_reverseBoosts->integer, g_randomizerEnableReverseBoost->integer) ? -1.0f : 1.0f);
 	if ( (pm->ps->pm_flags&PMF_TRIGGER_PUSHED) )
 	{
 		delta = 21;//?
@@ -4098,7 +4153,8 @@ static void PM_CrashLand( void )
 				}
 			}
 		}
-		else if ( (pm->cmd.upmove >= 0 || !g_crouchBoosts->integer) && !PM_InKnockDown( pm->ps ) && !PM_InRoll( pm->ps ))
+		else if ( (pm->cmd.upmove >= 0 || !MovementRestrictionSet(g_crouchBoosts->integer, g_randomizerEnableCrouchBoost->integer)) &&
+			!PM_InKnockDown( pm->ps ) && !PM_InRoll( pm->ps ))
 		{//not crouching
 			if ( signEB * delta > 10 
 				|| pm->ps->pm_flags & PMF_BACKWARDS_JUMP 
@@ -4165,7 +4221,8 @@ static void PM_CrashLand( void )
 					speedrun::SetLastLandingInfo({speedrun::LandingType::ElevationBoost, level.time});
 				}
 			}
-		} else if ( pm->cmd.upmove < 0 && g_crouchBoosts->integer && pm->ps->clientNum == 0 ) {
+		} else if ( pm->cmd.upmove < 0 && MovementRestrictionSet(g_crouchBoosts->integer, g_randomizerEnableCrouchBoost->integer) &&
+			pm->ps->clientNum == 0 ) {
 			speedrun::SetLastLandingInfo({speedrun::LandingType::CrouchBoost, level.time});
 		}
 	}
@@ -12497,6 +12554,20 @@ void PM_WeaponLightsaber(void)
 	// *********************************************************
 	// Check for WEAPON ATTACK
 	// *********************************************************
+
+	// Randomizer Debug
+	//We don't have an enemy, don't try to attack
+	//How the fuck did that get into release? It's checked everywhere else
+	/*
+	if (cg_enableRandomizer.integer)
+	{
+		if (strcmp(pm->gent->classname, "player") == 0) // Fix : Kyle couldn't attack
+		{
+			// Nothing
+		}
+		else if (!pm->gent->enemy) return;
+	}
+	*/
 
 	if ( PM_CanDoKata() )
 	{

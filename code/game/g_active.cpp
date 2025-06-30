@@ -12,6 +12,7 @@
 #ifdef _DEBUG
 	#include <float.h>
 #endif //_DEBUG
+#include "../randomizer/RandomizerUtils.h"
 
 #define	SLOWDOWN_DIST	128.0f
 #define	MIN_NPC_SPEED	16.0f
@@ -615,6 +616,23 @@ void P_WorldEffects( gentity_t *ent ) {
 		gi.WE_IsOutsideCausingPain(ent->currentOrigin) &&
 		TIMER_Done(ent, "AcidPainDebounce"))
 	{
+		// Randomizer : give the NPC replacing Kyle in vjun1 force protect, he will die without it
+		if (cg_enableRandomizer.integer)
+		{
+			if (strcmp(level.mapname, "vjun1") == 0)
+			{
+				// We do it once, no need to spam every frame
+				if (ent->targetname && (strcmp(ent->targetname, "kyle") == 0) && ent->client->ps.forcePowerLevel[FP_PROTECT] == 0)
+				{
+					ent->client->ps.forcePowersKnown |= (1 << FP_PROTECT);
+					ent->client->ps.forcePowerLevel[FP_PROTECT] = FORCE_LEVEL_3;
+					ent->client->ps.forcePowersKnown |= (1 << FP_HEAL);
+					ent->client->ps.forcePowerLevel[FP_HEAL] = FORCE_LEVEL_2;
+					ent->client->ps.forcePower = 100;
+				}
+			}
+		}
+
 		if (ent->NPC && ent->client && (ent->client->ps.forcePowersKnown&(1<< FP_PROTECT)))
 		{
 			if (!(ent->client->ps.forcePowersActive & (1<<FP_PROTECT)))
@@ -4814,6 +4832,38 @@ void ClientThink_real( gentity_t *ent, usercmd_t *ucmd )
 	if ( ent->s.number == 0 ) 
 	{
 extern cvar_t	*g_skippingcin;
+
+		if (!(ent->s.eFlags & EF_LOCKED_TO_WEAPON) && !(ent->s.eFlags & EF_HELD_BY_RANCOR) &&
+			!(ent->s.eFlags & EF_HELD_BY_WAMPA) && cg_enableRandomizer.integer &&
+			cg_enableRandomizerEnhancements.integer && cg_enableRandMovementType.integer) {
+			//initialize timer if not set
+			if (!RandomizerUtils::flyswimCheckTime)
+			{
+				RandomizerUtils::flyswimCheckTime = level.time + RandomizerUtils::FLYSWIM_TIMER;
+			}
+			else if (RandomizerUtils::flyswimCheckTime <= level.time) {
+				if (ent->client->moveType == MT_STATIC) {
+					//1 in 50 chance
+					uniform_int_distribution<int> flySwimChange(1, 50);
+					if (flySwimChange(rngRandoEnhancements) == 1) {
+ 						ent->client->moveType = MT_FLYSWIM;
+						ent->client->ps.gravity = 0;
+						ent->svFlags |= SVF_CUSTOM_GRAVITY;
+						
+					}
+				} else {
+					//50/50 chance to reset
+					uniform_int_distribution<int> resetMovementChance(0, 1);
+					if (resetMovementChance(rngRandoEnhancements)) {
+						ent->client->moveType = MT_STATIC;
+						ent->client->ps.gravity = DEFAULT_GRAVITY;
+						ent->svFlags &= ~SVF_CUSTOM_GRAVITY;
+					}
+				}
+				//Reset timer
+				RandomizerUtils::flyswimCheckTime = level.time + RandomizerUtils::FLYSWIM_TIMER;
+			}
+		}
 
 		if ( ent->s.eFlags & EF_LOCKED_TO_WEAPON )
 		{

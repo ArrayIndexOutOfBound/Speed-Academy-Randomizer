@@ -152,6 +152,16 @@ qboolean g_noClashFlare = qfalse;
 int		g_saberFlashTime = 0;
 vec3_t	g_saberFlashPos = {0,0,0};
 
+// Randomizer addition
+#include <random>
+extern mt19937 rngRandoEnhancements;
+extern vmCvar_t cg_enableRandomizer;
+extern vmCvar_t cg_enableRandomizerEnhancements;
+extern vmCvar_t	cg_enableRandSaberStyle;
+extern vmCvar_t	cg_enableRandSaberLength;
+extern vmCvar_t	cg_enableRandSaberColor;
+extern vmCvar_t	cg_startWithPush;
+
 int forcePowerDarkLight[NUM_FORCE_POWERS] = //0 == neutral
 { //nothing should be usable at rank 0..
 	FORCE_LIGHTSIDE,//FP_HEAL,//instant
@@ -885,7 +895,7 @@ int WP_SaberInitBladeData( gentity_t *ent )
 				VectorClear( ent->client->ps.saber[saberNum].blade[bladeNum].muzzleDir );
 				VectorClear( ent->client->ps.saber[saberNum].blade[bladeNum].muzzleDirOld );
 				ent->client->ps.saber[saberNum].blade[bladeNum].lengthOld = ent->client->ps.saber[saberNum].blade[bladeNum].length = 0;
-				if ( !ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax )
+ 				if ( !ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax )
 				{
 					if ( ent->client->NPC_class == CLASS_DESANN )
 					{//longer saber
@@ -899,6 +909,93 @@ int WP_SaberInitBladeData( gentity_t *ent )
 					{//standard saber length
 						ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = 40;
 					}
+				}
+				// Randomizer, Posto, this need rework, I'm always having the same saber.
+				if (ent->client->NPC_class == CLASS_DESANN)
+				{//longer saber
+					ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = 48;
+					// Randomizer addition
+					if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer)
+					{
+						if (cg_enableRandSaberLength.integer)
+						{
+							uniform_int_distribution<int> lengthDist(1, 180);
+							int rng = lengthDist(rngRandoEnhancements);
+							ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = rng + 12; // Range of 25% to 400% of initial value
+						}
+
+						if (cg_enableRandSaberColor.integer)
+						{
+							uniform_int_distribution<int> colorDist(0, 5);
+							int rng = colorDist(rngRandoEnhancements);
+							//ent->client->ps.saberColor = (saber_colors_t)rng;
+							ent->client->ps.saber[saberNum].blade[bladeNum].color = (saber_colors_t)rng;
+						}
+					}
+				}
+				else if (ent->client->NPC_class == CLASS_REBORN)
+				{//shorter saber
+					ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = 32;
+					// Randomizer addition
+					if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer)
+					{
+						if (cg_enableRandSaberLength.integer)
+						{
+							uniform_int_distribution<int> lengthDist(1, 120);
+							int rng = lengthDist(rngRandoEnhancements);
+							ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = rng + 8; // Range of 25% to 400% of initial value
+						}
+
+						if (cg_enableRandSaberColor.integer)
+						{
+							uniform_int_distribution<int> colorDist(0, 5);
+							int rng = colorDist(rngRandoEnhancements);
+							//ent->client->ps.saberColor = (saber_colors_t)rng;
+							ent->client->ps.saber[saberNum].blade[bladeNum].color = (saber_colors_t)rng;
+						}
+					}
+				}
+				else
+				{//standard saber length
+					ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = 40;
+					if (cg_enableRandomizer.integer && cg_enableRandomizerEnhancements.integer)
+					{
+						if (ent->client->NPC_class != CLASS_PLAYER) // Since it's at map load, and all npc are generated here, we may use rand()
+						{
+							if (cg_enableRandSaberLength.integer)
+							{
+								uniform_int_distribution<int> lengthDist(1, 150);
+								int rng = lengthDist(rngRandoEnhancements);
+								ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = rng + 10; // Range of 25% to 400% of initial value
+							}
+
+							if (cg_enableRandSaberColor.integer)
+							{
+								uniform_int_distribution<int> colorDist(0, 5);
+								int rng = colorDist(rngRandoEnhancements);
+								//ent->client->ps.saberColor = (saber_colors_t)rng;
+								ent->client->ps.saber[saberNum].blade[bladeNum].color = (saber_colors_t)rng;
+							}
+						}
+						else // That's Player, when drawing the saber might as well use the current time for the saber lenght
+						{
+							// Note : when using 2 sabers "either two single blade or one double), the length of only the first one is used.
+							if (cg_enableRandSaberLength.integer)
+							{
+								uniform_int_distribution<int> lengthDist(1, 150);
+								int rng = lengthDist(rngRandoEnhancements);
+								ent->client->ps.saber[saberNum].blade[bladeNum].lengthMax = rng + 10; // Range of 25% to 400% of initial value
+							}
+							if (cg_enableRandSaberColor.integer)
+							{
+								uniform_int_distribution<int> colorDist(0, 5);
+								int rng = colorDist(rngRandoEnhancements);
+								//ent->client->ps.saberColor = (saber_colors_t)rng;
+								ent->client->ps.saber[saberNum].blade[bladeNum].color = (saber_colors_t)rng;
+							}
+						}
+					}
+
 				}
 			}
 		}

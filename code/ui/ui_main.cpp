@@ -355,6 +355,13 @@ vmCvar_t	ui_hideBcallout;
 vmCvar_t	ui_hideXcallout;
 //END JLFCALLOUT
 
+// Randomizer addition
+//extern vmCvar_t cg_enableRandomizer;
+#include <random>
+#include <chrono>
+//extern mt19937 rngRandoBase;
+//extern mt19937 rngRandoEnhancements;
+
 
 static cvarTable_t cvarTable[] = 
 {
@@ -1224,6 +1231,7 @@ static qboolean UI_RunMenuScript ( const char **args )
 		}
 		else if (Q_stricmp(name, "affectforcepowerlevel") == 0) 
 		{
+			// Randomizer addition : it's here that we can give a random force power
 			const char *forceName;
 			String_Parse(args, &forceName);
 
@@ -1290,6 +1298,8 @@ static qboolean UI_RunMenuScript ( const char **args )
 		}
 		else if (Q_stricmp(name, "loadmissionselectmenu") == 0) 
 		{
+			// Randomizer addition : this is here that we will get the mission list
+			// tiers_complete = "t1_sour t1_rail t1_inter" : this is how the game knows which map has been done.
 			const char *cvarName;
 			String_Parse(args, &cvarName);
 
@@ -1300,6 +1310,7 @@ static qboolean UI_RunMenuScript ( const char **args )
 		}
 		else if (Q_stricmp(name, "missionselectanynext") == 0)
 		{
+			// Randomizer addition : this is here that we will get something (need to check what exactly)
 			UI_MissionSelectAnyNext();
 		}
 		else if (Q_stricmp(name, "calcforcestatus") == 0) 
@@ -1320,6 +1331,7 @@ static qboolean UI_RunMenuScript ( const char **args )
 		}
 		else if (Q_stricmp(name, "addweaponselection") == 0) 
 		{
+			// Randomizer addition : it's here that we can give a random weapon
 			const char *weaponIndex;
 			String_Parse(args, &weaponIndex);
 			if (!weaponIndex)
@@ -1369,6 +1381,7 @@ static qboolean UI_RunMenuScript ( const char **args )
 		}
 		else if (Q_stricmp(name, "addthrowweaponselection") == 0) 
 		{
+			// Randomizer addition : it's here that we can give a random weapon
 			const char *weaponIndex;
 			String_Parse(args, &weaponIndex);
 			if (!weaponIndex)
@@ -5051,16 +5064,53 @@ static void UI_AffectForcePowerLevel ( const char *forceName, const qboolean unl
 		return;
 	}
 
-	if (!UI_GetForcePowerIndex ( forceName, &forcePowerI ))
+
+	// Get player state
+	client_t* cl = &svs.clients[0];	// 0 because only ever us as a player	
+	playerState_t* pState = NULL;
+	int	forcelevel;
+
+	// Randomizer addition : random force power
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer"))
+	{
+		if (strcmp(forceName, "random") == 0)// == 0)
+		{
+			// Not the same as the one we use everywhere else, but who cares
+			mt19937 rngRandoEnhancements;
+			rngRandoEnhancements.seed(std::time(nullptr));
+			pState = cl->gentity->client;
+
+			// Don't want to touch the core force powers, so we only work with 8 FP total
+			int numberOfFPSide = 2; // Light, Dark
+			int numberOfFPUsable = 4; // 4 Power in each sides
+			uniform_int_distribution<int> FPSideDist(0, numberOfFPSide - 1);
+			int rngFPSide = FPSideDist(rngRandoEnhancements);
+			uniform_int_distribution<int> FPUsableDist(0, numberOfFPUsable - 1);
+			int rngFPUsable = FPUsableDist(rngRandoEnhancements);
+
+			// 0-3 or 12-15
+			forcePowerI = rngFPUsable + (rngFPSide * 12);
+
+			// We can't have all FP even if we do all missions, so it should be good
+			while (pState->forcePowerLevel[powerEnums[forcePowerI].powerEnum] >= 3) 
+			{
+				rngFPSide = FPSideDist(rngRandoEnhancements);
+				rngFPUsable = FPUsableDist(rngRandoEnhancements);
+				forcePowerI = rngFPUsable + (rngFPSide * 12);
+			}
+
+		}
+		else if (!UI_GetForcePowerIndex(forceName, &forcePowerI))
+		{
+			return;
+		}
+	}
+	else if (!UI_GetForcePowerIndex ( forceName, &forcePowerI ))
 	{
 		return;
 	}
 
 	int com_demo = Cvar_VariableIntegerValue( "com_demo" );
-	// Get player state
-	client_t* cl = &svs.clients[0];	// 0 because only ever us as a player	
-	playerState_t*		pState = NULL;
-	int	forcelevel;
 	if( cl && !com_demo)
 	{
 		pState = cl->gentity->client;
@@ -5680,6 +5730,104 @@ static void UI_MissionSelectAnyNext ( void )
 	}
 }
 
+static void	UI_AddWeaponSelectionRandom(int weaponIndex, int ammoIndex, int ammoAmount, char* iconItemName, char* litIconItemName, char* hexBackground, char* soundfile)
+{
+	itemDef_s* item, * iconItem, * litIconItem;
+	menuDef_t* menu;
+	menu = Menu_GetFocused();
+	iconItem = (itemDef_s*)Menu_FindItemByName(menu, iconItemName);
+	litIconItem = (itemDef_s*)Menu_FindItemByName(menu, litIconItemName);
+	char* chosenItemName, * chosenButtonName;
+	if (weaponIndex == uiInfo.selectedWeapon1)
+	{
+		UI_RemoveWeaponSelection(1);
+		return;
+	}
+	else if (weaponIndex == uiInfo.selectedWeapon2)
+	{
+		UI_RemoveWeaponSelection(2);
+		return;
+	}
+	if (uiInfo.selectedWeapon1 == NOWEAPON)
+	{
+		chosenItemName = "chosenweapon1_icon";
+		chosenButtonName = "chosenweapon1_button";
+		uiInfo.selectedWeapon1 = weaponIndex;
+		uiInfo.selectedWeapon1AmmoIndex = ammoIndex;
+
+		memcpy(uiInfo.selectedWeapon1ItemName, hexBackground, sizeof(uiInfo.selectedWeapon1ItemName));
+
+		//Save the lit and unlit icons for the selected weapon slot
+		uiInfo.litWeapon1Icon = litIconItem->window.background;
+		uiInfo.unlitWeapon1Icon = iconItem->window.background;
+
+		uiInfo.weapon1ItemButton = uiInfo.runScriptItem;
+		uiInfo.weapon1ItemButton->descText = "@MENUS_CLICKREMOVE";
+	}
+	else if (uiInfo.selectedWeapon2 == NOWEAPON)
+	{
+		chosenItemName = "chosenweapon2_icon";
+		chosenButtonName = "chosenweapon2_button";
+		uiInfo.selectedWeapon2 = weaponIndex;
+		uiInfo.selectedWeapon2AmmoIndex = ammoIndex;
+
+		memcpy(uiInfo.selectedWeapon2ItemName, hexBackground, sizeof(uiInfo.selectedWeapon2ItemName));
+
+		//Save the lit and unlit icons for the selected weapon slot
+		uiInfo.litWeapon2Icon = litIconItem->window.background;
+		uiInfo.unlitWeapon2Icon = iconItem->window.background;
+
+		uiInfo.weapon2ItemButton = uiInfo.runScriptItem;
+		uiInfo.weapon2ItemButton->descText = "@MENUS_CLICKREMOVE";
+	}
+	else	// Both slots are used, can't add it.
+	{
+		return;
+	}
+	item = (itemDef_s*)Menu_FindItemByName(menu, chosenItemName);
+	if ((item) && (iconItem))
+	{
+		item->window.background = iconItem->window.background;
+		item->window.flags |= WINDOW_VISIBLE;
+	}
+	item = (itemDef_s*)Menu_FindItemByName(menu, chosenButtonName);
+	if (item)
+	{
+		item->window.background = iconItem->window.background;
+		item->window.flags |= WINDOW_VISIBLE;
+	}
+	item = (itemDef_s*)Menu_FindItemByName(menu, hexBackground);
+	if (item)
+	{
+		item->window.foreColor[0] = 0;
+		item->window.foreColor[1] = 1;
+		item->window.foreColor[2] = 0;
+		item->window.foreColor[3] = 1;
+
+	}
+	client_t* cl = &svs.clients[0];	// 0 because only ever us as a player	
+	if (cl)
+	{
+		if (cl->gentity && cl->gentity->client)
+		{
+			playerState_t* pState = cl->gentity->client;
+			if ((weaponIndex > 0) && (weaponIndex < WP_NUM_WEAPONS))
+			{
+				pState->stats[STAT_WEAPONS] |= (1 << weaponIndex);
+			}
+			if ((ammoIndex > 0) && (ammoIndex < AMMO_MAX))
+			{
+				pState->ammo[ammoIndex] = ammoAmount;
+			}
+		}
+	}
+	if (soundfile)
+	{
+		DC->startLocalSound(DC->registerSound(soundfile, qfalse), CHAN_LOCAL);
+	}
+	UI_WeaponsSelectionsComplete();	// Test to see if the mission begin button should turn on or off
+}
+
 // Update the player weapons with the chosen weapon
 static void	UI_AddWeaponSelection ( const int weaponIndex, const int ammoIndex, const int ammoAmount, const char *iconItemName,const char *litIconItemName, const char *hexBackground, const char *soundfile )
 {
@@ -5691,6 +5839,68 @@ static void	UI_AddWeaponSelection ( const int weaponIndex, const int ammoIndex, 
 	if (!menu)
 	{
 		return;
+	}
+
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer"))
+	{
+		if (weaponIndex == 99)// == 0) // I only care about the wepaon index, and will cahnge all arguments values
+		{
+			/*
+			"3" "2" "300"	"brifle_icon"	"brifle_icon_lit"	"brifle_hex_background"	"sound/weapons/blaster/select.wav"
+			"4" "3" "300"	"disruptor_icon"	"disruptor_icon_lit"	"disruptor_hex_background"  "sound/weapons/disruptor/select.wav"
+			"5" "3" "300"	"bowcaster_icon"	"bowcaster_icon_lit"	"bowcaster_hex_background" "sound/weapons/bowcaster/select.wav"
+			"6" "4" "400" "repeater_icon" "repeater_icon_lit"	"repeater_hex_background"  "sound/weapons/repeater/select.wav"
+			"7" "3" "300"	"demp_icon"	"demp_icon_lit"	"demp_hex_background"  "sound/weapons/demp2/select.wav"
+			"8" "4" "400"	"flechette_icon"	"flechette_icon_lit"	"flechette_hex_background"  "sound/weapons/flechette/select.wav"
+			"9" "5" "10"	"rocket_icon"	"rocket_icon_lit"	"rocket_hex_background"  "sound/weapons/rocket/select.wav"
+			"13" "4" "400"	"concussion_icon"	"concussion_icon_lit"	"concussion_hex_background"   "sound/weapons/concussion/select.wav"
+			*/
+
+			// Exemple of system_clock::now() : 2025-06-13 11:20:53:6211835
+			// The result inside millis is 621 as an int64
+			INT64 millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() % 1000;
+
+			mt19937 rngRandoEnhancements;
+			//rngRandoEnhancements.seed(std::time(nullptr));
+			rngRandoEnhancements.seed(millis);
+
+			int numberOfRifles = 8;
+			uniform_int_distribution<int> RifleWPDist(0, numberOfRifles - 1);
+			int rngRifleWP = RifleWPDist(rngRandoEnhancements);
+
+			switch (rngRifleWP)
+			{
+			case 0:
+				UI_AddWeaponSelectionRandom(3, 2, 300, "brifle_icon", "brifle_icon_lit", "brifle_hex_background", "sound/weapons/blaster/select.wav");
+				break;
+			case 1:
+				UI_AddWeaponSelectionRandom(4, 3, 300, "disruptor_icon", "disruptor_icon_lit", "disruptor_hex_background", "sound/weapons/disruptor/select.wav");
+				break;
+			case 2:
+				UI_AddWeaponSelectionRandom(5, 3, 300, "bowcaster_icon", "bowcaster_icon_lit", "bowcaster_hex_background", "sound/weapons/bowcaster/select.wav");
+				break;
+			case 3:
+				UI_AddWeaponSelectionRandom(6, 4, 400, "repeater_icon", "repeater_icon_lit", "repeater_hex_background", "sound/weapons/repeater/select.wav");
+				break;
+			case 4:
+				UI_AddWeaponSelectionRandom(7, 3, 300, "demp_icon", "demp_icon_lit", "demp_hex_background", "sound/weapons/demp2/select.wav");
+				break;
+			case 5:
+				UI_AddWeaponSelectionRandom(8, 4, 400, "flechette_icon", "flechette_icon_lit", "flechette_hex_background", "sound/weapons/flechette/select.wav");
+				break;
+			case 6:
+				UI_AddWeaponSelectionRandom(9, 5, 10, "rocket_icon", "rocket_icon_lit", "rocket_hex_background", "sound/weapons/rocket/select.wav");
+				break;
+			case 7:
+				UI_AddWeaponSelectionRandom(13, 4, 400, "concussion_icon", "concussion_icon_lit", "concussion_hex_background", "sound/weapons/concussion/select.wav");
+				break;
+			}
+			return;
+		}
+		else // Nothing special, right ?
+		{
+
+		}
 	}
 
 	iconItem = (itemDef_s *) Menu_FindItemByName(menu, iconItemName );
@@ -5989,6 +6199,79 @@ static void	UI_HighLightWeaponSelection ( const int selectionslot )
 	}
 }
 
+static void	UI_AddThrowWeaponSelectionRandom(int weaponIndex, int ammoIndex, int ammoAmount, char* iconItemName, char* litIconItemName, char* hexBackground, char* soundfile)
+{
+	itemDef_s* item, * iconItem, * litIconItem;
+	menuDef_t* menu;
+	menu = Menu_GetFocused();
+	iconItem = (itemDef_s*)Menu_FindItemByName(menu, iconItemName);
+	litIconItem = (itemDef_s*)Menu_FindItemByName(menu, litIconItemName);
+	char* chosenItemName, * chosenButtonName;
+	if (uiInfo.selectedThrowWeapon != NOWEAPON)
+	{
+		if (uiInfo.selectedThrowWeapon == weaponIndex)
+		{	// Deselect it
+			UI_RemoveThrowWeaponSelection();
+		}
+		return;
+	}
+	chosenItemName = "chosenthrowweapon_icon";
+	chosenButtonName = "chosenthrowweapon_button";
+	uiInfo.selectedThrowWeapon = weaponIndex;
+	uiInfo.selectedThrowWeaponAmmoIndex = ammoIndex;
+	uiInfo.weaponThrowButton = uiInfo.runScriptItem;
+	if (uiInfo.weaponThrowButton)
+	{
+		uiInfo.weaponThrowButton->descText = "@MENUS_CLICKREMOVE";
+	}
+	memcpy(uiInfo.selectedThrowWeaponItemName, hexBackground, sizeof(uiInfo.selectedWeapon1ItemName));
+	uiInfo.litThrowableIcon = litIconItem->window.background;
+	uiInfo.unlitThrowableIcon = iconItem->window.background;
+
+	item = (itemDef_s*)Menu_FindItemByName(menu, chosenItemName);
+	if ((item) && (iconItem))
+	{
+		item->window.background = iconItem->window.background;
+		item->window.flags |= WINDOW_VISIBLE;
+	}
+	item = (itemDef_s*)Menu_FindItemByName(menu, chosenButtonName);
+	if (item)
+	{
+		item->window.background = iconItem->window.background;
+		item->window.flags |= WINDOW_VISIBLE;
+	}
+	item = (itemDef_s*)Menu_FindItemByName(menu, hexBackground);
+	if (item)
+	{
+		item->window.foreColor[0] = 0.0f;
+		item->window.foreColor[1] = 0.0f;
+		item->window.foreColor[2] = 1.0f;
+		item->window.foreColor[3] = 1.0f;
+
+	}
+	client_t* cl = &svs.clients[0];	// 0 because only ever us as a player	
+	if (cl)	// No client, get out
+	{
+		if (cl->gentity && cl->gentity->client)
+		{
+			playerState_t* pState = cl->gentity->client;
+			if ((weaponIndex > 0) && (weaponIndex < WP_NUM_WEAPONS))
+			{
+				pState->stats[STAT_WEAPONS] |= (1 << weaponIndex);
+			}
+			if ((ammoIndex > 0) && (ammoIndex < AMMO_MAX))
+			{
+				pState->ammo[ammoIndex] = ammoAmount;
+			}
+		}
+	}
+	if (soundfile)
+	{
+		DC->startLocalSound(DC->registerSound(soundfile, qfalse), CHAN_LOCAL);
+	}
+	UI_WeaponsSelectionsComplete();	// Test to see if the mission begin button should turn on or off
+}
+
 // Update the player throwable weapons (okay it's a bad description) with the chosen weapon
 static void	UI_AddThrowWeaponSelection ( const int weaponIndex, const int ammoIndex, const int ammoAmount, const char *iconItemName,const char *litIconItemName, const char *hexBackground, const char *soundfile )
 {
@@ -6000,6 +6283,46 @@ static void	UI_AddThrowWeaponSelection ( const int weaponIndex, const int ammoIn
 	if (!menu)
 	{
 		return;
+	}
+
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer"))
+	{
+		if (weaponIndex == 99)// == 0) // I only care about the wepaon index, and will cahnge all arguments values
+		{
+			// "10" "7" "10"	"thermal_icon" "thermal_icon_lit"	"thermal_hex_background"  "sound/weapons/thermal/select.wav"
+			// "11" "8" "5" "tripmine_icon"	"tripmine_icon_lit" "tripmine_hex_background"  "sound/weapons/detpack/select.wav"
+			// "12" "9" "5"	"detpack_icon"	"detpack_icon_lit" "detpack_hex_background"  "sound/weapons/detpack/select.wav"
+
+			// Exemple of system_clock::now() : 2025-06-13 11:20:53:6211835
+			// The result inside millis is 621 as an int64
+			INT64 millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() % 1000;
+
+			mt19937 rngRandoEnhancements;
+			//rngRandoEnhancements.seed(std::time(nullptr));
+			rngRandoEnhancements.seed(millis);
+
+			int numberOfExplosives = 3;
+			uniform_int_distribution<int> ExplosiveWPDist(0, numberOfExplosives - 1);
+			int rngExplosiveWP = ExplosiveWPDist(rngRandoEnhancements);
+
+			switch (rngExplosiveWP)
+			{
+			case 0:
+				UI_AddThrowWeaponSelectionRandom(10, 7, 10, "thermal_icon", "thermal_icon_lit", "thermal_hex_background", "sound/weapons/thermal/select.wav");
+				break;
+			case 1:
+				UI_AddThrowWeaponSelectionRandom(11, 8, 5, "tripmine_icon", "tripmine_icon_lit", "tripmine_hex_background", "sound/weapons/detpack/select.wav");
+				break;
+			case 2:
+				UI_AddThrowWeaponSelectionRandom(12, 9, 5, "detpack_icon", "detpack_icon_lit", "detpack_hex_background", "sound/weapons/detpack/select.wav");
+				break;
+			}
+			return;
+		}
+		else // Nothing special, right ?
+		{
+
+		}
 	}
 
 	iconItem = (itemDef_s *) Menu_FindItemByName(menu, iconItemName );

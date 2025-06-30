@@ -52,6 +52,9 @@
     <Filter Include="speedrun\speedrun_timer_q3">
       <UniqueIdentifier>{1c10f176-a8f6-4cc9-b3aa-a5407c7a0578}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Randomizer">
+      <UniqueIdentifier>{a1718802-f8de-47a0-9b27-6cb6b4ea7a09}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AI_Animal.cpp">
@@ -537,6 +540,9 @@
     <ClCompile Include="..\speedrun\speedrun_timer_q3\timer_helper.cpp">
       <Filter>speedrun\speedrun_timer_q3</Filter>
     </ClCompile>
+    <ClCompile Include="..\randomizer\RandomizerUtils.cpp">
+      <Filter>Randomizer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\win32\game.rc">
@@ -852,6 +858,9 @@
     </ClInclude>
     <ClInclude Include="..\speedrun\speedrun_timer_q3\timer_helper.h">
       <Filter>speedrun\speedrun_timer_q3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\randomizer\RandomizerUtils.h">
+      <Filter>Randomizer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

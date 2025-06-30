@@ -12,6 +12,7 @@
 #include "snd_local.h"
 #include "cl_mp3.h"
 #include "snd_music.h"
+#include <random>
 
 static void S_Play_f(void);
 static void S_SoundList_f(void);
@@ -631,8 +632,18 @@ void S_ReloadAllUsedSounds(void)
 		{
 			sfx_t *sfx = &s_knownSfx[i];
 
-			if (!sfx->bInMemory && !sfx->bDefaultSound && sfx->iLastLevelUsedOn == RE_RegisterMedia_GetLevel()){
+			// Randomizer addition
+			//Reload ALL sounds
+			if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
+				Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
+				Cvar_VariableIntegerValue("cg_enableRandLanguageVoices")) {
 				S_memoryLoad(sfx);
+			}
+			else {
+				//Vanilla
+				if (!sfx->bInMemory && !sfx->bDefaultSound && sfx->iLastLevelUsedOn == RE_RegisterMedia_GetLevel()) {
+					S_memoryLoad(sfx);
+				}
 			}
 		}
 	}
@@ -1494,6 +1505,38 @@ void S_StartAmbientSound( const vec3_t origin, int entityNum, unsigned char volu
 	}
 }
 
+sfx_t* GetRandomValidSfx(sfxHandle_t sfxHandle) {
+	int rng = rand() % sizeof(s_knownSfx);
+	int searchIndex = 0;
+	//optimization because it's unclear how many valid sounds we have loaded, if we hit ten nulls in a row assume we're at the end of the array
+	int nullCount = 0;
+	int skippedCount = 0;
+	sfx_t* origSfx = &s_knownSfx[sfxHandle];
+	while(1) { //due to not knowing how many valid sounds we have we may have to iterate over the array multiple times
+		if (nullCount >= 10 || searchIndex >= sizeof(s_knownSfx)) {
+			searchIndex = 0;
+			nullCount = 0;
+		}
+		//Safety checks
+		if (!&s_knownSfx[searchIndex].pSoundData[0]) { //skip if null
+			nullCount++;
+		} else if (!origSfx->lipSyncData || &s_knownSfx[searchIndex].lipSyncData) //check lipSyncData
+		{ 
+			nullCount = 0;
+			if (skippedCount >= rng) {
+				return &s_knownSfx[searchIndex];
+			}
+			else {
+				skippedCount++;
+			}
+		}
+		else {
+			nullCount = 0;
+		}
+		searchIndex++;
+	}
+}
+
 /*
 ====================
 S_StartSound
@@ -1521,7 +1564,18 @@ void S_StartSound(const vec3_t origin, int entityNum, soundChannel_t entchannel,
 		Com_Error( ERR_DROP, "S_StartSound: handle %i out of range", sfxHandle );
 	}
 
-	sfx = &s_knownSfx[ sfxHandle ];
+	sfx = &s_knownSfx[sfxHandle];
+	string sndName = sfx->sSoundName;
+
+	// Randomizer : this is called when a sound is done, how to optimize ?
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
+		Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
+		(Cvar_VariableIntegerValue("cg_enableRandSounds") ||
+		Cvar_VariableIntegerValue("cg_enableRandJumpSound") && sndName.find("jump1") != std::string::npos))
+	{
+		sfx = GetRandomValidSfx(sfxHandle);
+	}
+	
 	if (sfx->bInMemory == qfalse){
 		S_memoryLoad(sfx);
 	}

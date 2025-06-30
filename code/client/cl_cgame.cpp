@@ -48,6 +48,10 @@ extern qboolean R_inPVS( vec3_t p1, vec3_t p2 );
 
 void UI_SetActiveMenu( const char* menuname,const char *menuID );
 
+// Randomizer addition
+extern void S_ReloadAllUsedSounds();
+
+
 /*
 ====================
 CL_GetGameState
@@ -1054,6 +1058,24 @@ void CL_InitCGame( void ) {
 	const char			*info;
 	const char			*mapname;
 	int		t1, t2;
+
+	/*
+	* Randomizer addition
+	* Some sound effects stay loaded between levels e.g. Kyles jump noise
+	* To re-randomise on level change we need to clear the sound set here
+	*/
+	if (Cvar_VariableIntegerValue("cg_enableRandomizer") &&
+		Cvar_VariableIntegerValue("cg_enableRandomizerEnhancements") &&
+		Cvar_VariableIntegerValue("cg_enableRandLanguageVoices")) {
+		// Careful for memory leaks
+		S_Shutdown(); // This release the memory we were holding
+		S_Init();
+		extern qboolean	s_soundMuted;
+		s_soundMuted = qfalse;
+		S_RestartMusic();
+		S_ReloadAllUsedSounds();
+		AS_ParseSets();
+	}
 
 	t1 = Sys_Milliseconds();
 

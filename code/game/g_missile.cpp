@@ -11,6 +11,9 @@
 	#include <float.h>
 #endif //_DEBUG
 
+// Randdomizer addition
+extern vmCvar_t	cg_enableRandomizer;
+
 extern qboolean InFront( vec3_t spot, vec3_t from, vec3_t fromAngles, float threshHold = 0.0f );
 qboolean LogAccuracyHit( gentity_t *target, gentity_t *attacker );
 extern qboolean PM_SaberInParry( int move );
@@ -658,6 +661,10 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace, int hitLoc=HL_NONE )
 	other = &g_entities[trace->entityNum];
 	if ( other == ent )
 	{
+		//Debug convenience, this doesn't change anything in FinalBuild but prevents popups when debugging
+		if (cg_enableRandomizer.integer) {
+			return;
+		}
 		assert(0&&"missile hit itself!!!");
 		return;
 	}

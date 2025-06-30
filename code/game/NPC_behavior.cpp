@@ -11,6 +11,10 @@ we need it...
 #include "g_navigator.h"
 #include "Q3_Interface.h"
 
+// Randomizer addition
+extern vmCvar_t	cg_enableRandomizer;
+extern vmCvar_t	cg_safeCompanions;
+
 extern cvar_t	*g_AIsurrender;
 extern	qboolean	showBBoxes;
 static vec3_t NPCDEBUG_BLUE = {0.0, 0.0, 1.0};
@@ -721,8 +725,233 @@ void NPC_BSFollowLeader_LookAtLeader(void)
 	NPC_UpdateAngles(qtrue, qtrue);
 }
 
+// Randomizer addition
+void NPC_BSFollowLeaderRandomizer(void)
+{
+	vec3_t		vec;
+	float		leaderDist;
+	visibility_t	leaderVis;
+	int			curAnim;
+
+	if (!NPC->client->leader)
+	{//ok, stand guard until we find an enemy
+		if (NPCInfo->tempBehavior == BS_HUNT_AND_KILL)
+		{
+			NPCInfo->tempBehavior = BS_DEFAULT;
+		}
+		else
+		{
+			NPCInfo->tempBehavior = BS_STAND_GUARD;
+			NPC_BSStandGuard();
+		}
+		return;
+	}
+
+	if (!NPC->enemy && ~NPCInfo->scriptFlags & SVF_IGNORE_ENEMIES) //Only look for an enemy if ignore enemies is not set
+	{//no enemy, find one
+		NPC_CheckEnemy(NPCInfo->confusionTime < level.time, qfalse);//don't find new enemy if this is tempbehav
+		if (NPC->enemy)
+		{//just found one
+			NPCInfo->enemyCheckDebounceTime = level.time + Q_irand(3000, 10000);
+		}
+		else
+		{
+			if (!(NPCInfo->scriptFlags & SCF_IGNORE_ALERTS))
+			{
+				int eventID = NPC_CheckAlertEvents(qtrue, qtrue);
+				if (level.alertEvents[eventID].level >= AEL_SUSPICIOUS && (NPCInfo->scriptFlags & SCF_LOOK_FOR_ENEMIES))
+				{
+					NPCInfo->lastAlertID = level.alertEvents[eventID].ID;
+					if (!level.alertEvents[eventID].owner ||
+						!level.alertEvents[eventID].owner->client ||
+						level.alertEvents[eventID].owner->health <= 0 ||
+						level.alertEvents[eventID].owner->client->playerTeam != NPC->client->enemyTeam)
+					{//not an enemy
+					}
+					else
+					{
+						//FIXME: what if can't actually see enemy, don't know where he is... should we make them just become very alert and start looking for him?  Or just let combat AI handle this... (act as if you lost him)
+						G_SetEnemy(NPC, level.alertEvents[eventID].owner);
+						NPCInfo->enemyCheckDebounceTime = level.time + Q_irand(3000, 10000);
+						NPCInfo->enemyLastSeenTime = level.time;
+						TIMER_Set(NPC, "attackDelay", Q_irand(500, 1000));
+					}
+				}
+
+			}
+		}
+		if (!NPC->enemy)
+		{
+			if (NPC->client->leader
+				&& NPC->client->leader->enemy
+				&& NPC->client->leader->enemy != NPC
+				&& ((NPC->client->leader->enemy->client && NPC->client->leader->enemy->client->playerTeam == NPC->client->enemyTeam)
+					|| (NPC->client->leader->enemy->svFlags & SVF_NONNPC_ENEMY && NPC->client->leader->enemy->noDamageTeam == NPC->client->enemyTeam))
+				&& NPC->client->leader->enemy->health > 0)
+			{
+				G_SetEnemy(NPC, NPC->client->leader->enemy);
+				NPCInfo->enemyCheckDebounceTime = level.time + Q_irand(3000, 10000);
+				NPCInfo->enemyLastSeenTime = level.time;
+			}
+		}
+	}
+	else if (~NPCInfo->scriptFlags & SVF_IGNORE_ENEMIES)
+	{
+		if (NPC->enemy->health <= 0 || (NPC->enemy->flags & FL_NOTARGET))
+		{
+			G_ClearEnemy(NPC);
+			if (NPCInfo->enemyCheckDebounceTime > level.time + 1000)
+			{
+				NPCInfo->enemyCheckDebounceTime = level.time + Q_irand(1000, 2000);
+			}
+		}
+		else if (NPC->client->ps.weapon && NPCInfo->enemyCheckDebounceTime < level.time)
+		{
+			NPC_CheckEnemy((NPCInfo->confusionTime < level.time || NPCInfo->tempBehavior != BS_FOLLOW_LEADER), qfalse);//don't find new enemy if this is tempbehav
+		}
+	}
+
+	if (NPC->enemy && NPC->client->ps.weapon)
+	{//If have an enemy, face him and fire
+		if (NPC->client->ps.weapon == WP_SABER)//|| NPCInfo->confusionTime>level.time )
+		{//lightsaber user or charmed enemy
+			if (NPCInfo->tempBehavior != BS_FOLLOW_LEADER)
+			{//not already in a temp bState
+				//go after the guy
+				NPCInfo->tempBehavior = BS_HUNT_AND_KILL;
+				NPC_UpdateAngles(qtrue, qtrue);
+				return;
+			}
+		}
+
+		//Don't target an enemy if they have a saber and we do not so we don't die due to deflected bolts
+		if (cg_enableRandomizer.integer && cg_safeCompanions.integer && NPC->client && NPC->enemy->client) {
+			if (NPC->client->ps.weapon != WP_SABER && NPC->enemy->client->playerTeam != TEAM_PLAYER && NPC->enemy->client->ps.weapon == WP_SABER) {
+				//Bravely bravely run away
+				NPCInfo->tempBehavior = BS_RETREAT;
+				TIMER_Set(NPC, "retreat", 1000);
+				NPC_UpdateAngles(qtrue, qtrue);
+				return;
+			}
+		}
+
+		enemyVisibility = NPC_CheckVisibility(NPC->enemy, CHECK_FOV | CHECK_SHOOT);//CHECK_360|CHECK_PVS|
+		if (enemyVisibility > VIS_PVS)
+		{//face
+			vec3_t	enemy_org, muzzle, delta, angleToEnemy;
+			float	distanceToEnemy;
+
+			CalcEntitySpot(NPC->enemy, SPOT_HEAD, enemy_org);
+			NPC_AimWiggle(enemy_org);
+
+			CalcEntitySpot(NPC, SPOT_WEAPON, muzzle);
+
+			VectorSubtract(enemy_org, muzzle, delta);
+			vectoangles(delta, angleToEnemy);
+			distanceToEnemy = VectorNormalize(delta);
+
+			NPCInfo->desiredYaw = angleToEnemy[YAW];
+			NPCInfo->desiredPitch = angleToEnemy[PITCH];
+			NPC_UpdateFiringAngles(qtrue, qtrue);
+
+			if (enemyVisibility >= VIS_SHOOT)
+			{//shoot
+				NPC_AimAdjust(2);
+				if (NPC_GetHFOVPercentage(NPC->enemy->currentOrigin, NPC->currentOrigin, NPC->client->ps.viewangles, NPCInfo->stats.hfov) > 0.6f
+					&& NPC_GetHFOVPercentage(NPC->enemy->currentOrigin, NPC->currentOrigin, NPC->client->ps.viewangles, NPCInfo->stats.vfov) > 0.5f)
+				{//actually withing our front cone
+					WeaponThink(qtrue);
+				}
+			}
+			else
+			{
+				NPC_AimAdjust(1);
+			}
+
+			//NPC_CheckCanAttack(1.0, qfalse);
+		}
+		else
+		{
+			NPC_AimAdjust(-1);
+		}
+	}
+	else
+	{//FIXME: combine with vector calc below
+		vec3_t	head, leaderHead, delta, angleToLeader;
+
+		CalcEntitySpot(NPC->client->leader, SPOT_HEAD, leaderHead);
+		CalcEntitySpot(NPC, SPOT_HEAD, head);
+		VectorSubtract(leaderHead, head, delta);
+		vectoangles(delta, angleToLeader);
+		VectorNormalize(delta);
+		NPC->NPC->desiredYaw = angleToLeader[YAW];
+		NPC->NPC->desiredPitch = angleToLeader[PITCH];
+
+		NPC_UpdateAngles(qtrue, qtrue);
+	}
+
+	//leader visible?
+	leaderVis = NPC_CheckVisibility(NPC->client->leader, CHECK_PVS | CHECK_360 | CHECK_SHOOT);//			ent->e_UseFunc = useF_NULL;
+
+
+	//Follow leader, stay within visibility and a certain distance, maintain a distance from.
+	curAnim = NPC->client->ps.legsAnim;
+	if (curAnim != BOTH_ATTACK1 && curAnim != BOTH_ATTACK2 && curAnim != BOTH_ATTACK3 && curAnim != BOTH_MELEE1 && curAnim != BOTH_MELEE2)
+	{//Don't move toward leader if we're in a full-body attack anim
+		//FIXME, use IdealDistance to determine if we need to close distance
+		float	followDist = 96.0f;//FIXME:  If there are enmies, make this larger?
+		float	backupdist, walkdist, minrundist;
+
+		if (NPCInfo->followDist)
+		{
+			followDist = NPCInfo->followDist;
+		}
+		backupdist = followDist / 2.0f;
+		walkdist = followDist * 0.83;
+		minrundist = followDist * 1.33;
+
+		VectorSubtract(NPC->client->leader->currentOrigin, NPC->currentOrigin, vec);
+		leaderDist = VectorLength(vec);//FIXME: make this just nav distance?
+		//never get within their radius horizontally
+		vec[2] = 0;
+		float leaderHDist = VectorLength(vec);
+		if (leaderHDist > backupdist && (leaderVis != VIS_SHOOT || leaderDist > walkdist))
+		{//We should close in?
+			NPCInfo->goalEntity = NPC->client->leader;
+
+			NPC_SlideMoveToGoal();
+			if (leaderVis == VIS_SHOOT && leaderDist < minrundist)
+			{
+				ucmd.buttons |= BUTTON_WALKING;
+			}
+		}
+		else if (leaderDist < backupdist)
+		{//We should back off?
+			NPCInfo->goalEntity = NPC->client->leader;
+			NPC_SlideMoveToGoal();
+
+			//reversing direction
+			ucmd.forwardmove = -ucmd.forwardmove;
+			ucmd.rightmove = -ucmd.rightmove;
+			VectorScale(NPC->client->ps.moveDir, -1, NPC->client->ps.moveDir);
+		}//otherwise, stay where we are
+		//check for do not enter and stop if there's one there...
+		if (ucmd.forwardmove || ucmd.rightmove || VectorCompare(vec3_origin, NPC->client->ps.moveDir))
+		{
+			NPC_MoveDirClear(ucmd.forwardmove, ucmd.rightmove, qtrue);
+		}
+	}
+}
+
 void NPC_BSFollowLeader (void)
 {
+	// Randomizer addition
+	if (cg_enableRandomizer.integer)
+	{
+		NPC_BSFollowLeaderRandomizer();
+		return;
+	}
+
 	// If In A Jump, Return
 	//----------------------
 	if (NPC_Jumping())
@@ -1660,6 +1889,165 @@ void NPC_JawaFleeSound( void )
 		G_SoundOnEnt(NPC, CHAN_VOICE, "sound/chars/jawa/misc/ooh-tee-nee.wav" );
 		NPCInfo->blockedSpeechDebounceTime = level.time + 2000;
 	}
+}
+
+qboolean NPC_BSRetreat(void)
+{
+	bool		enemyRecentlySeen = false;
+	float		enemyTooCloseDist = 50.0f;
+	bool		reachedEscapePoint = false;
+	bool		hasEscapePoint = false;
+	bool		moveSuccess = false;
+
+	// Check For Enemies And Alert Events
+	//------------------------------------
+	NPC_CheckEnemy(qtrue, qfalse);
+	NPC_CheckAlertEvents(qtrue, qtrue, -1, qfalse, AEL_DANGER, qfalse);
+	if (NPC->enemy && G_ClearLOS(NPC, NPC->enemy))
+	{
+		NPCInfo->enemyLastSeenTime = level.time;
+	}
+	enemyRecentlySeen = (NPC->enemy && (level.time - NPCInfo->enemyLastSeenTime) < 3000);
+	if (enemyRecentlySeen)
+	{
+		if (NPC->enemy->client && NPC->enemy->client->NPC_class == CLASS_RANCOR)
+		{
+			enemyTooCloseDist = 400.0f;
+		}
+		enemyTooCloseDist += NPC->maxs[0] + NPC->enemy->maxs[0];
+	}
+
+	// If Attempting To Get To An Entity That Is Gone, Clear The Pointer
+	//-------------------------------------------------------------------
+	if (NPCInfo->goalEntity
+		&& !Q3_TaskIDPending(NPC, TID_MOVE_NAV)
+		&& NPC->enemy
+		&& Distance(NPCInfo->goalEntity->currentOrigin, NPC->enemy->currentOrigin) < enemyTooCloseDist)
+	{
+		//our goal is too close to our enemy, dump it...
+		NPCInfo->goalEntity = NULL;
+	}
+	if (NPCInfo->goalEntity && !NPCInfo->goalEntity->inuse)
+	{
+		NPCInfo->goalEntity = 0;
+	}
+	hasEscapePoint = (NPCInfo->goalEntity && NPCInfo->goalRadius != 0.0f);
+
+	STEER::Activate(NPC);
+	{
+		// Have We Reached The Escape Point?
+		//-----------------------------------
+		if (hasEscapePoint && STEER::Reached(NPC, NPCInfo->goalEntity, NPCInfo->goalRadius, false))
+		{
+			if (Q3_TaskIDPending(NPC, TID_MOVE_NAV))
+			{
+				Q3_TaskIDComplete(NPC, TID_MOVE_NAV);
+			}
+			reachedEscapePoint = true;
+		}
+
+
+		// If Super Close To The Enemy, Run In The Other Direction
+		//---------------------------------------------------------
+		if (enemyRecentlySeen &&
+			Distance(NPC->enemy->currentOrigin, NPC->currentOrigin) < enemyTooCloseDist)
+		{
+			STEER::Evade(NPC, NPC->enemy);
+			STEER::AvoidCollisions(NPC);
+		}
+
+		// If Already At The Escape Point, don't move
+		//-------------------------------------------------------------
+		else if (reachedEscapePoint)
+		{
+			STEER::Stop(NPC);
+		}
+		else
+		{
+			// Try To Get To The Escape Point
+			//--------------------------------
+			if (hasEscapePoint)
+			{
+				moveSuccess = STEER::GoTo(NPC, NPCInfo->goalEntity, true);
+				if (!moveSuccess)
+				{
+					moveSuccess = NAV::GoTo(NPC, NPCInfo->goalEntity, 0.3f);
+				}
+			}
+
+			// Cant Get To The Escape Point, So If There Is An Enemy
+			//-------------------------------------------------------
+			if (!moveSuccess && enemyRecentlySeen)
+			{
+				// Try To Get To The Farthest Combat Point From Him
+				//--------------------------------------------------
+				NAV::TNodeHandle Nbr = NAV::ChooseFarthestNeighbor(NPC, NPC->enemy->currentOrigin, 0.25f);
+				if (Nbr > 0)
+				{
+					moveSuccess = STEER::GoTo(NPC, NAV::GetNodePosition(Nbr), true);
+					if (!moveSuccess)
+					{
+						moveSuccess = NAV::GoTo(NPC, Nbr, 0.3f);
+					}
+				}
+			}
+
+			// If We Still Can't (Or Don't Need To) Move, Just Stop
+			//------------------------------------------------------
+			if (!moveSuccess)
+			{
+				STEER::Stop(NPC);
+			}
+		}
+	}
+	STEER::DeActivate(NPC, &ucmd);
+
+
+	// Is There An Enemy Around?
+	//---------------------------
+	if (enemyRecentlySeen)
+	{
+		// Time To Choose A New Escape Point?
+		//------------------------------------
+		if ((!hasEscapePoint || reachedEscapePoint) && TIMER_Done(NPC, "FindNewEscapePointDebounce"))
+		{
+			TIMER_Set(NPC, "FindNewEscapePointDebounce", 2500);
+
+			int escapePoint = NPC_FindCombatPoint(
+				NPC->currentOrigin,
+				NPC->enemy->currentOrigin,
+				NPC->currentOrigin,
+				CP_COVER | CP_AVOID_ENEMY | CP_HAS_ROUTE,
+				128);
+			if (escapePoint != -1)
+			{
+				NPC_JawaFleeSound();
+				NPC_SetCombatPoint(escapePoint);
+				NPC_SetMoveGoal(NPC, level.combatPoints[escapePoint].origin, 8, qtrue, escapePoint);
+			}
+		}
+	}
+
+
+	// If Only Temporarly In Flee, Think About Perhaps Returning To Combat
+	//---------------------------------------------------------------------
+	if (NPCInfo->tempBehavior == BS_RETREAT &&
+		TIMER_Done(NPC, "retreat") &&
+		NPC->s.weapon != WP_NONE &&
+		NPC->s.weapon != WP_MELEE
+		)
+	{
+		NPCInfo->tempBehavior = BS_DEFAULT;
+	}
+
+	// Always Update Angles
+	//----------------------
+	NPC_UpdateAngles(qtrue, qtrue);
+	if (reachedEscapePoint)
+	{
+		return qtrue;
+	}
+	return qfalse;
 }
 
 extern gentity_t *NPC_SearchForWeapons( void );

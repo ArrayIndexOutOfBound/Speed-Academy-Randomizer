@@ -20,7 +20,9 @@ extern vec3_t playerMins;
 extern vec3_t playerMaxs;
 extern stringID_table_t WPTable[];
 
-#define		MAX_MODELS_PER_LEVEL	40
+//#define		MAX_MODELS_PER_LEVEL	40
+// Randomizer addition : up the limit of differents models for NPCs
+#define		MAX_MODELS_PER_LEVEL	80
 
 #ifdef _XBOX
 using dllNamespace::hstring;

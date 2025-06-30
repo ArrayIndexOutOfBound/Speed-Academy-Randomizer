@@ -82,7 +82,6 @@ void CG_ItemPickup( int itemNum, qboolean bHadItem ) {
 
 	if (bg_itemlist[itemNum].classname && bg_itemlist[itemNum].classname[0])
 	{ 
-
 		char text[1024], data[1024];
 		if (cgi_SP_GetStringTextString("SP_INGAME_PICKUPLINE",text, sizeof(text)) )
 		{			

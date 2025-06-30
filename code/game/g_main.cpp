@@ -14,6 +14,10 @@
 #include "objectives.h"
 #include "../cgame/cg_local.h"	// yeah I know this is naughty, but we're shipping soon...
 
+// Randomizer addition
+#include <string>
+#include "../randomizer/RandomizerUtils.h"
+
 //rww - RAGDOLL_BEGIN
 #include "../ghoul2/ghoul2_gore.h"
 //rww - RAGDOLL_END
@@ -204,6 +208,12 @@ cvar_t	*g_crouchBoosts;
 cvar_t	*g_reverseBoosts;
 cvar_t	*g_randomBoosts;
 cvar_t	*g_selfKnockback;
+
+//New additions for randomizer
+cvar_t *g_randomizerEnableVrgi;
+cvar_t *g_randomizerEnableSpinGlitch;
+cvar_t *g_randomizerEnableCrouchBoost;
+cvar_t *g_randomizerEnableReverseBoost;
 
 qboolean	stop_icarus = qfalse;
 
@@ -561,6 +571,8 @@ void G_FindTeams( void ) {
 				continue;
 			if (e2->flags & FL_TEAMSLAVE)
 				continue;
+			if (e->spawnflags & SFB_CINEMATIC) //Ignore cinematic NPCs
+				continue;
 			if (!strcmp(e->team, e2->team))
 			{
 				c2++;
@@ -694,6 +706,10 @@ void G_InitCvars( void ) {
 
 	gi.cvar( "g_clearstats", "1", CVAR_ROM|CVAR_NORESTART);
 
+	g_randomizerEnableVrgi = gi.cvar("g_randomizerEnableVrgi", "0", CVAR_ARCHIVE);
+	g_randomizerEnableSpinGlitch = gi.cvar("g_randomizerEnableSpinGlitch", "0", CVAR_ARCHIVE);
+	g_randomizerEnableCrouchBoost = gi.cvar("g_randomizerEnableCrouchBoost", "0", CVAR_ARCHIVE);
+	g_randomizerEnableReverseBoost = gi.cvar("g_randomizerEnableReverseBoost", "0", CVAR_ARCHIVE);
 }
 /*
 ============
@@ -723,11 +739,33 @@ void InitGame(  const char *mapname, const char *spawntarget, int checkSum, cons
 	gi.Printf ("gamename: %s\n", GAMEVERSION);
 	gi.Printf ("gamedate: %s\n", __DATE__);
 
-	srand( randomSeed );
+	// Randomizer addition
+	//Reset randomiser seed on new load of yavin1b
+	if (cg_enableRandomizer.integer)
+	{
+		if ((!Q_stricmp(mapname, "yavin1b") && eSavedGameJustLoaded == eNO) || eSavedGameJustLoaded == eRESET) {
+			RandomizerUtils::RegenerateSeed();
+		}
+		char	seed[MAX_STRING_CHARS];
+		gi.Cvar_VariableStringBuffer("cg_setSeed", seed, sizeof(seed));
+		RandomizerUtils::seedRandomizer(seed, mapname);
+	}
+	else
+	{
+		srand(randomSeed);
+	}
 
 	G_InitCvars();
 
 	G_InitMemory();
+
+	// Randomizer addition
+	//Always setup movement restriction values so they're available if switched on later in the level
+	uniform_int_distribution<int> enableDisable(0, 1);
+	g_randomizerEnableVrgi->integer = enableDisable(rngRandoEnhancements);
+	g_randomizerEnableSpinGlitch->integer = enableDisable(rngRandoEnhancements);
+	g_randomizerEnableCrouchBoost->integer = enableDisable(rngRandoEnhancements);
+	g_randomizerEnableReverseBoost->integer = enableDisable(rngRandoEnhancements);
 
 	// set some level globals
 	memset( &level, 0, sizeof( level ) );
