@@ -1199,6 +1199,7 @@ void FinishSpawningItem( gentity_t *ent ) {
 			// Posto Edit : I encountered holocron that were inside walls, so might as well update their hitbox too
 			updateItemMinsMaxs(itemNew);
 		}
+
 		item = itemNew;
 		ent->classname == item->classname;
 		ent->item = item;
