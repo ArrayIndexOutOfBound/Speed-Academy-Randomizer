@@ -9160,7 +9160,7 @@ static void PM_BeginWeaponChange( int weapon ) {
 			//CG_RegisterItemVisuals(WP_ATST_MAIN);
 			CG_RegisterItemSounds((item - bg_itemlist));
 			CG_RegisterItemVisuals((item - bg_itemlist));
-			pm->gent->client->ps.stats[STAT_WEAPONS] |= (1 << WP_ATST_MAIN) | (1 << WP_ATST_SIDE);
+			//pm->gent->client->ps.stats[STAT_WEAPONS] |= (1 << WP_ATST_MAIN) | (1 << WP_ATST_SIDE);
 			CG_ChangeWeapon(WP_ATST_MAIN);
 			//CG_Weapon_f((void)WP_ATST_MAIN);
 		}
@@ -9172,7 +9172,7 @@ static void PM_BeginWeaponChange( int weapon ) {
 			//CG_RegisterItemVisuals(WP_ATST_SIDE);
 			CG_RegisterItemSounds((item - bg_itemlist));
 			CG_RegisterItemVisuals((item - bg_itemlist));
-			pm->gent->client->ps.stats[STAT_WEAPONS] |= (1 << WP_ATST_MAIN) | (1 << WP_ATST_SIDE);
+			//pm->gent->client->ps.stats[STAT_WEAPONS] |= (1 << WP_ATST_MAIN) | (1 << WP_ATST_SIDE);
 			CG_ChangeWeapon(WP_ATST_SIDE);
 			//CG_Weapon_f((void)WP_ATST_SIDE);
 		}

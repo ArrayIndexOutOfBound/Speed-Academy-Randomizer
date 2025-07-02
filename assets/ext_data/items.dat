@@ -289,7 +289,7 @@ tag			WP_ATST_MAIN
 itemname	ITM_ATST_SIDE_PICKUP
 
 classname	weapon_atst_side
-worldmodel	models/weapons2/noweap/noweap.md3
+worldmodel	models/weapons2/atstsidecannon/atstsidecannon.md3
 icon		gfx/hud/w_icon_atstside
 // Amount of ammo given with weapon
 count		400

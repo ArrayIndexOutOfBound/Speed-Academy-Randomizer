@@ -508,7 +508,7 @@ muzzleEffect	emplaced/muzzle_flash
 {
 weapontype   	WP_ATST_SIDE
 weaponclass  	weapon_atst_side
-weaponmodel  	models/weapons2/noweap/noweap.md3
+weaponmodel  	models/weapons2/atstsidecannon/atstsidecannon.md3
 weaponIcon  	gfx/hud/w_icon_atstside
 altenergypershot 1
 altrange         8192

@@ -2621,6 +2621,12 @@ void SP_NPC_Vehicle( gentity_t *self)
 	}
 }
 
+void PrecacheAtstWeapons()
+{
+	RegisterItem(FindItemForWeapon(WP_ATST_MAIN));	//precache the weapon
+	RegisterItem(FindItemForWeapon(WP_ATST_SIDE));	//precache the weapon
+}
+
 //=============================================================================================
 //CHARACTERS
 //=============================================================================================
@@ -2634,6 +2640,15 @@ SHY - Spawner is shy
 void SP_NPC_Player( gentity_t *self)
 {
 	self->NPC_type = "Player";
+
+	//We need to cache these somewhere in case they're spawned and player spawn is as stupid a place to do this as any
+	//Otherwise the models won't be loaded until they're picked up UNLESS there is an atst somewhere in the level
+	//All the other weapons are precached by some black magic somewhere that I just can't figure out and these are excluded
+	//I hate this game so much
+	if (cg_enableRandomizer.integer)
+	{
+		PrecacheAtstWeapons();
+	}
 
 	SP_NPC_spawner( self );
 }
